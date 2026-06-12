@@ -1,0 +1,8 @@
+{
+  "name": "#abababffSample Level",
+  "descriptions": ["Made with PewPew Studio"],
+  "information": "",
+  "entry_point": "level.lua",
+  "has_score_leaderboard": true,
+  "rank_thresholds_1p": { "bronze": 100, "silver": 200, "gold": 300 }
+}
