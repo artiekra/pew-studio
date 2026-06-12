@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { deleteProjectFiles, initProjectFiles } from './fileSystem';
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -42,12 +43,14 @@ export async function createProject(name: string): Promise<Project> {
   };
   projects.unshift(project); // newest first
   await saveProjects(projects);
+  await initProjectFiles(project.id);
   return project;
 }
 
 export async function deleteProject(id: string): Promise<void> {
   const projects = await getProjects();
   await saveProjects(projects.filter((p) => p.id !== id));
+  await deleteProjectFiles(id);
 }
 
 export async function renameProject(id: string, newName: string): Promise<void> {
