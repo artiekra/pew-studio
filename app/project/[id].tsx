@@ -7,19 +7,19 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
-import { Icon } from '@/components/ui/icon';
-import { Text } from '@/components/ui/text';
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icon";
+import { Text } from "@/components/ui/text";
 import {
   addFolder,
   getFileTree,
   removeNode,
   type FileNode,
   type ProjectFileTree,
-} from '@/lib/fileSystem';
-import { getProjects, type Project } from '@/lib/projects';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+} from "@/lib/fileSystem";
+import { getProjects, type Project } from "@/lib/projects";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import {
   ArrowLeftIcon,
   ChevronDownIcon,
@@ -31,9 +31,9 @@ import {
   PlayIcon,
   RocketIcon,
   Trash2Icon,
-} from 'lucide-react-native';
-import * as React from 'react';
-import { Modal, Pressable, TextInput, View } from 'react-native';
+} from "lucide-react-native";
+import * as React from "react";
+import { Modal, Pressable, TextInput, View } from "react-native";
 
 // ── Screen ──────────────────────────────────────────────────────────
 
@@ -47,7 +47,7 @@ export default function ProjectScreen() {
   // New-folder modal state
   const [folderModalVisible, setFolderModalVisible] = React.useState(false);
   const [folderParentId, setFolderParentId] = React.useState<string | null>(null);
-  const [newFolderName, setNewFolderName] = React.useState('');
+  const [newFolderName, setNewFolderName] = React.useState("");
 
   // Deletion state
   const [nodeToDelete, setNodeToDelete] = React.useState<FileNode | null>(null);
@@ -78,7 +78,7 @@ export default function ProjectScreen() {
 
   const handleNewFolderOpen = React.useCallback((parentId: string | null) => {
     setFolderParentId(parentId);
-    setNewFolderName('');
+    setNewFolderName("");
     setFolderModalVisible(true);
   }, []);
 
@@ -122,8 +122,7 @@ export default function ProjectScreen() {
           {/* Root-level "New Folder" button */}
           <Pressable
             className="mb-2 flex-row items-center gap-2 rounded-lg px-3 py-2 active:opacity-70"
-            onPress={() => handleNewFolderOpen(null)}
-          >
+            onPress={() => handleNewFolderOpen(null)}>
             <Icon as={FolderPlusIcon} className="size-4 text-muted-foreground" size={16} />
             <Text className="text-sm text-muted-foreground">New folder</Text>
           </Pressable>
@@ -167,16 +166,13 @@ export default function ProjectScreen() {
         visible={folderModalVisible}
         transparent
         animationType="fade"
-        onRequestClose={() => setFolderModalVisible(false)}
-      >
+        onRequestClose={() => setFolderModalVisible(false)}>
         <Pressable
           className="flex-1 items-center justify-center bg-black/50 p-6"
-          onPress={() => setFolderModalVisible(false)}
-        >
+          onPress={() => setFolderModalVisible(false)}>
           <Pressable
             className="w-full max-w-sm gap-4 rounded-2xl border border-border bg-card p-6"
-            onPress={() => {}}
-          >
+            onPress={() => {}}>
             <Text className="text-xl font-semibold text-foreground">New Folder</Text>
             <TextInput
               className="rounded-lg border border-border bg-secondary px-4 py-3 text-base text-foreground"
@@ -205,18 +201,17 @@ export default function ProjectScreen() {
         open={!!nodeToDelete}
         onOpenChange={(open) => {
           if (!open) setNodeToDelete(null);
-        }}
-      >
+        }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Delete {nodeToDelete?.type === 'folder' ? 'Folder' : 'File'}
+              Delete {nodeToDelete?.type === "folder" ? "Folder" : "File"}
             </AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete "{nodeToDelete?.name}"?
-              {nodeToDelete?.type === 'folder'
-                ? ' All contents inside this folder will also be deleted.'
-                : ''}{' '}
+              {nodeToDelete?.type === "folder"
+                ? " All contents inside this folder will also be deleted."
+                : ""}{" "}
               This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -251,7 +246,7 @@ function FileTreeNode({
   onNewFolder: (parentId: string | null) => void;
   onDelete: (node: FileNode) => void;
 }) {
-  const isFolder = node.type === 'folder';
+  const isFolder = node.type === "folder";
   const isExpanded = expandedFolders.has(node.id);
   const indent = depth * 20;
 
@@ -262,8 +257,7 @@ function FileTreeNode({
         style={{ marginLeft: indent, marginBottom: 4 }}
         onPress={() => {
           if (isFolder) onToggle(node.id);
-        }}
-      >
+        }}>
         {/* Chevron for folders */}
         {isFolder ? (
           <Icon
@@ -293,8 +287,7 @@ function FileTreeNode({
             onPress={(e) => {
               e.stopPropagation();
               onNewFolder(node.id);
-            }}
-          >
+            }}>
             <Icon as={FolderPlusIcon} className="size-4 text-muted-foreground" size={16} />
           </Pressable>
         )}
@@ -306,24 +299,25 @@ function FileTreeNode({
           onPress={(e) => {
             e.stopPropagation();
             onDelete(node);
-          }}
-        >
+          }}>
           <Icon as={Trash2Icon} className="size-4 text-muted-foreground" size={16} />
         </Pressable>
       </Pressable>
 
       {/* Render children when expanded */}
-      {isFolder && isExpanded && node.children?.map((child) => (
-        <FileTreeNode
-          key={child.id}
-          node={child}
-          depth={depth + 1}
-          expandedFolders={expandedFolders}
-          onToggle={onToggle}
-          onNewFolder={onNewFolder}
-          onDelete={onDelete}
-        />
-      ))}
+      {isFolder &&
+        isExpanded &&
+        node.children?.map((child) => (
+          <FileTreeNode
+            key={child.id}
+            node={child}
+            depth={depth + 1}
+            expandedFolders={expandedFolders}
+            onToggle={onToggle}
+            onNewFolder={onNewFolder}
+            onDelete={onDelete}
+          />
+        ))}
     </>
   );
 }

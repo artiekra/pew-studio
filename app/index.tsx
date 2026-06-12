@@ -7,38 +7,21 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
-import { Icon } from '@/components/ui/icon';
-import { Text } from '@/components/ui/text';
-import {
-  createProject,
-  deleteProject,
-  getProjects,
-  type Project,
-} from '@/lib/projects';
-import { Stack, useRouter } from 'expo-router';
-import {
-  FolderIcon,
-  MoonStarIcon,
-  PlusIcon,
-  SunIcon,
-  Trash2Icon,
-} from 'lucide-react-native';
-import { useColorScheme } from 'nativewind';
-import * as React from 'react';
-import {
-  FlatList,
-  Modal,
-  Pressable,
-  TextInput,
-  View,
-} from 'react-native';
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icon";
+import { Text } from "@/components/ui/text";
+import { createProject, deleteProject, getProjects, type Project } from "@/lib/projects";
+import { Stack, useRouter } from "expo-router";
+import { FolderIcon, MoonStarIcon, PlusIcon, SunIcon, Trash2Icon } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
+import * as React from "react";
+import { FlatList, Modal, Pressable, TextInput, View } from "react-native";
 
 // ── Screen options ───────────────────────────────────────────────────
 
 const SCREEN_OPTIONS = {
-  title: 'PewPew Studio',
+  title: "PewPew Studio",
   headerRight: () => <ThemeToggle />,
 };
 
@@ -47,7 +30,7 @@ const SCREEN_OPTIONS = {
 function formatDate(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60_000);
-  if (mins < 1) return 'Just now';
+  if (mins < 1) return "Just now";
   if (mins < 60) return `${mins}m ago`;
   const hours = Math.floor(mins / 60);
   if (hours < 24) return `${hours}h ago`;
@@ -62,7 +45,7 @@ export default function ProjectsScreen() {
   const [projects, setProjects] = React.useState<Project[]>([]);
   const [loaded, setLoaded] = React.useState(false);
   const [modalVisible, setModalVisible] = React.useState(false);
-  const [newName, setNewName] = React.useState('');
+  const [newName, setNewName] = React.useState("");
   const [projectToDelete, setProjectToDelete] = React.useState<Project | null>(null);
 
   // Load projects on mount
@@ -78,7 +61,7 @@ export default function ProjectsScreen() {
     if (!trimmed) return;
     const project = await createProject(trimmed);
     setProjects((prev) => [project, ...prev]);
-    setNewName('');
+    setNewName("");
     setModalVisible(false);
   }, [newName]);
 
@@ -102,11 +85,9 @@ export default function ProjectsScreen() {
       <View className="flex-1 bg-background">
         {projects.length === 0 ? (
           <View className="flex-1 items-center justify-center gap-3 p-8">
-            <Icon as={FolderIcon} className="text-muted-foreground size-12" size={48} />
-            <Text className="text-muted-foreground text-center text-lg">
-              No projects yet
-            </Text>
-            <Text className="text-muted-foreground text-center text-sm">
+            <Icon as={FolderIcon} className="size-12 text-muted-foreground" size={48} />
+            <Text className="text-center text-lg text-muted-foreground">No projects yet</Text>
+            <Text className="text-center text-sm text-muted-foreground">
               Tap the + button to create your first project.
             </Text>
           </View>
@@ -115,9 +96,7 @@ export default function ProjectsScreen() {
             data={projects}
             keyExtractor={(item) => item.id}
             contentContainerClassName="p-4 gap-3"
-            renderItem={({ item }) => (
-              <ProjectCard project={item} onDelete={handleDelete} />
-            )}
+            renderItem={({ item }) => <ProjectCard project={item} onDelete={handleDelete} />}
           />
         )}
 
@@ -126,9 +105,8 @@ export default function ProjectsScreen() {
           <Button
             size="icon"
             className="h-14 w-14 rounded-full shadow-lg"
-            onPress={() => setModalVisible(true)}
-          >
-            <Icon as={PlusIcon} className="text-primary-foreground size-6" size={24} />
+            onPress={() => setModalVisible(true)}>
+            <Icon as={PlusIcon} className="size-6 text-primary-foreground" size={24} />
           </Button>
         </View>
       </View>
@@ -138,20 +116,17 @@ export default function ProjectsScreen() {
         visible={modalVisible}
         transparent
         animationType="fade"
-        onRequestClose={() => setModalVisible(false)}
-      >
+        onRequestClose={() => setModalVisible(false)}>
         <Pressable
           className="flex-1 items-center justify-center bg-black/50 p-6"
-          onPress={() => setModalVisible(false)}
-        >
+          onPress={() => setModalVisible(false)}>
           {/* Stop propagation so tapping the card doesn't close the modal */}
           <Pressable
-            className="bg-card border-border w-full max-w-sm gap-4 rounded-2xl border p-6"
-            onPress={() => {}}
-          >
-            <Text className="text-foreground text-xl font-semibold">New Project</Text>
+            className="w-full max-w-sm gap-4 rounded-2xl border border-border bg-card p-6"
+            onPress={() => {}}>
+            <Text className="text-xl font-semibold text-foreground">New Project</Text>
             <TextInput
-              className="bg-secondary text-foreground border-border rounded-lg border px-4 py-3 text-base"
+              className="rounded-lg border border-border bg-secondary px-4 py-3 text-base text-foreground"
               placeholder="Project name"
               placeholderTextColor="#888"
               value={newName}
@@ -177,8 +152,7 @@ export default function ProjectsScreen() {
         open={!!projectToDelete}
         onOpenChange={(open) => {
           if (!open) setProjectToDelete(null);
-        }}
-      >
+        }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Project</AlertDialogTitle>
@@ -213,15 +187,14 @@ function ProjectCard({
 
   return (
     <Pressable
-      className="bg-card border-border flex-row items-center gap-4 rounded-xl border p-4 active:opacity-80"
-      onPress={() => router.push(`/project/${project.id}`)}
-    >
-      <View className="bg-secondary h-11 w-11 items-center justify-center rounded-lg">
-        <Icon as={FolderIcon} className="text-foreground size-5" size={20} />
+      className="flex-row items-center gap-4 rounded-xl border border-border bg-card p-4 active:opacity-80"
+      onPress={() => router.push(`/project/${project.id}`)}>
+      <View className="h-11 w-11 items-center justify-center rounded-lg bg-secondary">
+        <Icon as={FolderIcon} className="size-5 text-foreground" size={20} />
       </View>
       <View className="flex-1">
-        <Text className="text-foreground text-base font-semibold">{project.name}</Text>
-        <Text className="text-muted-foreground text-sm">
+        <Text className="text-base font-semibold text-foreground">{project.name}</Text>
+        <Text className="text-sm text-muted-foreground">
           Edited {formatDate(project.updatedAt)}
         </Text>
       </View>
@@ -229,9 +202,8 @@ function ProjectCard({
         size="icon"
         variant="ghost"
         className="rounded-full"
-        onPress={() => onDelete(project)}
-      >
-        <Icon as={Trash2Icon} className="text-muted-foreground size-5" size={18} />
+        onPress={() => onDelete(project)}>
+        <Icon as={Trash2Icon} className="size-5 text-muted-foreground" size={18} />
       </Button>
     </Pressable>
   );
@@ -252,9 +224,8 @@ function ThemeToggle() {
       onPressIn={toggleColorScheme}
       size="icon"
       variant="ghost"
-      className="ios:size-9 rounded-full web:mx-4"
-    >
-      <Icon as={THEME_ICONS[colorScheme ?? 'light']} className="size-5" />
+      className="ios:size-9 rounded-full web:mx-4">
+      <Icon as={THEME_ICONS[colorScheme ?? "light"]} className="size-5" />
     </Button>
   );
 }

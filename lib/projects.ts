@@ -1,5 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { deleteProjectFiles, initProjectFiles } from './fileSystem';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { deleteProjectFiles, initProjectFiles } from "./fileSystem";
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -12,7 +12,7 @@ export type Project = {
 
 // ── Storage keys ─────────────────────────────────────────────────────
 
-const PROJECTS_KEY = 'pewpew_projects';
+const PROJECTS_KEY = "pewpew_projects";
 
 // ── Helpers ──────────────────────────────────────────────────────────
 

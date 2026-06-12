@@ -1,11 +1,11 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // ── Types ────────────────────────────────────────────────────────────
 
 export type FileNode = {
   id: string;
   name: string;
-  type: 'file' | 'folder';
+  type: "file" | "folder";
   /** Only meaningful for files – stores the text content. */
   content?: string;
   children?: FileNode[];
@@ -27,12 +27,12 @@ function generateNodeId(): string {
 
 const DEFAULT_MANIFEST: string = JSON.stringify(
   {
-    name: 'Untitled',
-    version: '1.0.0',
-    entry_point: 'level.lua',
+    name: "Untitled",
+    version: "1.0.0",
+    entry_point: "level.lua",
   },
   null,
-  2,
+  2
 );
 
 const DEFAULT_LEVEL_LUA = `\
@@ -61,20 +61,20 @@ export function createDefaultTree(): ProjectFileTree {
   return [
     {
       id: generateNodeId(),
-      name: 'manifest.json',
-      type: 'file',
+      name: "manifest.json",
+      type: "file",
       content: DEFAULT_MANIFEST,
     },
     {
       id: generateNodeId(),
-      name: 'level.lua',
-      type: 'file',
+      name: "level.lua",
+      type: "file",
       content: DEFAULT_LEVEL_LUA,
     },
     {
       id: generateNodeId(),
-      name: 'simple_mesh.lua',
-      type: 'file',
+      name: "simple_mesh.lua",
+      type: "file",
       content: DEFAULT_SIMPLE_MESH_LUA,
     },
   ];
@@ -90,10 +90,7 @@ export async function getFileTree(projectId: string): Promise<ProjectFileTree> {
 }
 
 /** Persist a file tree. */
-export async function saveFileTree(
-  projectId: string,
-  tree: ProjectFileTree,
-): Promise<void> {
+export async function saveFileTree(projectId: string, tree: ProjectFileTree): Promise<void> {
   await AsyncStorage.setItem(storageKey(projectId), JSON.stringify(tree));
 }
 
@@ -116,14 +113,14 @@ export async function deleteProjectFiles(projectId: string): Promise<void> {
 export async function addFolder(
   projectId: string,
   parentId: string | null,
-  folderName: string,
+  folderName: string
 ): Promise<ProjectFileTree> {
   const tree = await getFileTree(projectId);
 
   const newFolder: FileNode = {
     id: generateNodeId(),
     name: folderName,
-    type: 'folder',
+    type: "folder",
     children: [],
   };
 
@@ -131,7 +128,7 @@ export async function addFolder(
     tree.push(newFolder);
   } else {
     const parent = findNode(tree, parentId);
-    if (parent && parent.type === 'folder') {
+    if (parent && parent.type === "folder") {
       if (!parent.children) parent.children = [];
       parent.children.push(newFolder);
     }
@@ -145,10 +142,7 @@ export async function addFolder(
  * Remove a node (file or folder) by id.
  * If it's a folder, all its children are removed recursively.
  */
-export async function removeNode(
-  projectId: string,
-  nodeId: string,
-): Promise<ProjectFileTree> {
+export async function removeNode(projectId: string, nodeId: string): Promise<ProjectFileTree> {
   const tree = await getFileTree(projectId);
   const filtered = removeFromTree(tree, nodeId);
   await saveFileTree(projectId, filtered);
