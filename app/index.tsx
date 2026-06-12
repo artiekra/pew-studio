@@ -17,7 +17,7 @@ import {
   getProjects,
   type Project,
 } from '@/lib/projects';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import {
   FolderIcon,
   MoonStarIcon,
@@ -209,8 +209,13 @@ function ProjectCard({
   project: Project;
   onDelete: (project: Project) => void;
 }) {
+  const router = useRouter();
+
   return (
-    <Pressable className="bg-card border-border flex-row items-center gap-4 rounded-xl border p-4 active:opacity-80">
+    <Pressable
+      className="bg-card border-border flex-row items-center gap-4 rounded-xl border p-4 active:opacity-80"
+      onPress={() => router.push(`/project/${project.id}`)}
+    >
       <View className="bg-secondary h-11 w-11 items-center justify-center rounded-lg">
         <Icon as={FolderIcon} className="text-foreground size-5" size={20} />
       </View>
