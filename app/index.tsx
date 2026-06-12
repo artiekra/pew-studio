@@ -1,3 +1,13 @@
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
@@ -18,7 +28,6 @@ import {
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
 import {
-  Alert,
   FlatList,
   Modal,
   Pressable,
@@ -54,6 +63,7 @@ export default function ProjectsScreen() {
   const [loaded, setLoaded] = React.useState(false);
   const [modalVisible, setModalVisible] = React.useState(false);
   const [newName, setNewName] = React.useState('');
+  const [projectToDelete, setProjectToDelete] = React.useState<Project | null>(null);
 
   // Load projects on mount
   React.useEffect(() => {
@@ -73,22 +83,15 @@ export default function ProjectsScreen() {
   }, [newName]);
 
   const handleDelete = React.useCallback((project: Project) => {
-    Alert.alert(
-      'Delete Project',
-      `Are you sure you want to delete "${project.name}"? This cannot be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            await deleteProject(project.id);
-            setProjects((prev) => prev.filter((p) => p.id !== project.id));
-          },
-        },
-      ]
-    );
+    setProjectToDelete(project);
   }, []);
+
+  const confirmDelete = React.useCallback(async () => {
+    if (!projectToDelete) return;
+    await deleteProject(projectToDelete.id);
+    setProjects((prev) => prev.filter((p) => p.id !== projectToDelete.id));
+    setProjectToDelete(null);
+  }, [projectToDelete]);
 
   if (!loaded) return null;
 
@@ -168,6 +171,31 @@ export default function ProjectsScreen() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      {/* ── Delete-project alert dialog ───────────────────────────── */}
+      <AlertDialog
+        open={!!projectToDelete}
+        onOpenChange={(open) => {
+          if (!open) setProjectToDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Project</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{projectToDelete?.name}"? This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              <Text>Cancel</Text>
+            </AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive" onPress={confirmDelete}>
+              <Text>Delete</Text>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
