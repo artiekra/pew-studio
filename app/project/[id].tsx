@@ -39,6 +39,7 @@ import {
   FilePlusIcon,
   FolderIcon,
   FolderPlusIcon,
+  GripVerticalIcon,
   MoveIcon,
   PackageIcon,
   PencilIcon,
@@ -47,7 +48,61 @@ import {
   Trash2Icon,
 } from "lucide-react-native";
 import * as React from "react";
-import { Modal, Pressable, ScrollView, TextInput, View } from "react-native";
+import {
+  type GestureResponderEvent,
+  type LayoutChangeEvent,
+  Modal,
+  PanResponder,
+  type PanResponderGestureState,
+  Pressable,
+  ScrollView,
+  TextInput,
+  View,
+} from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
+
+// ── Drag context ────────────────────────────────────────────────────
+
+type FlatNode = {
+  node: FileNode;
+  depth: number;
+  parentId: string | null;
+};
+
+function flattenVisibleTree(
+  nodes: FileNode[],
+  depth: number,
+  expandedFolders: Set<string>,
+  parentId: string | null
+): FlatNode[] {
+  const result: FlatNode[] = [];
+  for (const node of nodes) {
+    result.push({ node, depth, parentId });
+    if (node.type === "folder" && expandedFolders.has(node.id) && node.children) {
+      result.push(...flattenVisibleTree(node.children, depth + 1, expandedFolders, node.id));
+    }
+  }
+  return result;
+}
+
+type DragContextType = {
+  draggedNodeId: string | null;
+  dropTargetId: string | null | undefined; // null = root, undefined = none, string = folder id
+  registerLayout: (nodeId: string, absoluteY: number, height: number) => void;
+  startDrag: (node: FileNode, pageY: number) => void;
+};
+
+const DragContext = React.createContext<DragContextType>({
+  draggedNodeId: null,
+  dropTargetId: undefined,
+  registerLayout: () => {},
+  startDrag: () => {},
+});
 
 // ── Screen ──────────────────────────────────────────────────────────
 
@@ -73,12 +128,159 @@ export default function ProjectScreen() {
   const [nodeToRename, setNodeToRename] = React.useState<FileNode | null>(null);
   const [renameValue, setRenameValue] = React.useState("");
 
-  // Move modal state
+  // Move modal state (from dropdown menu)
   const [moveModalVisible, setMoveModalVisible] = React.useState(false);
   const [nodeToMove, setNodeToMove] = React.useState<FileNode | null>(null);
 
   // Deletion state
   const [nodeToDelete, setNodeToDelete] = React.useState<FileNode | null>(null);
+
+  // ── Drag state ──────────────────────────────────────────────────
+  const [draggedNode, setDraggedNode] = React.useState<FileNode | null>(null);
+  const [dropTargetId, setDropTargetId] = React.useState<string | null | undefined>(undefined);
+
+  const dragY = useSharedValue(0);
+  const dragOpacity = useSharedValue(0);
+  const dragScale = useSharedValue(0.95);
+
+  // Store tree container's absolute Y for coordinate mapping
+  const treeAbsoluteYRef = React.useRef(0);
+  const treeContainerRef = React.useRef<View>(null);
+
+  // Store each node's absolute Y + height for hit-testing
+  const nodeLayoutsRef = React.useRef<Map<string, { absoluteY: number; height: number }>>(
+    new Map()
+  );
+
+  // Flat node list for parent lookups during drop target computation
+  const flatNodesRef = React.useRef<FlatNode[]>([]);
+
+  // Keep flat nodes in sync
+  React.useEffect(() => {
+    flatNodesRef.current = flattenVisibleTree(fileTree, 0, expandedFolders, null);
+  }, [fileTree, expandedFolders]);
+
+  const registerLayout = React.useCallback((nodeId: string, absoluteY: number, height: number) => {
+    nodeLayoutsRef.current.set(nodeId, { absoluteY, height });
+  }, []);
+
+  // ── Drag pan responder ──────────────────────────────────────────
+  // This is attached to the tree container. It only tracks movement
+  // AFTER a drag is started (via long-press on a row's drag handle).
+  const dragActiveRef = React.useRef(false);
+  const draggedNodeRef = React.useRef<FileNode | null>(null);
+
+  const startDrag = React.useCallback((node: FileNode, pageY: number) => {
+    draggedNodeRef.current = node;
+    dragActiveRef.current = true;
+    setDraggedNode(node);
+    setDropTargetId(undefined);
+    dragY.value = pageY;
+    dragOpacity.value = withTiming(1, { duration: 150 });
+    dragScale.value = withSpring(1.03);
+  }, []);
+
+  const updateDragPosition = React.useCallback((pageY: number) => {
+    if (!dragActiveRef.current || !draggedNodeRef.current) return;
+
+    dragY.value = pageY;
+
+    // Determine drop target by finding which row the finger is over
+    const draggedId = draggedNodeRef.current.id;
+    let foundTarget: string | null | undefined = null; // default to root
+
+    for (const [nodeId, layout] of nodeLayoutsRef.current) {
+      if (pageY >= layout.absoluteY && pageY < layout.absoluteY + layout.height) {
+        // Finger is over this node
+        if (nodeId === draggedId) {
+          foundTarget = undefined; // over self — no target
+          break;
+        }
+        // Don't allow dropping into own descendants
+        if (nodeId.startsWith(`${draggedId}/`)) {
+          foundTarget = undefined;
+          break;
+        }
+        // Find the flat node to determine if it's a folder or file
+        const flat = flatNodesRef.current.find((f) => f.node.id === nodeId);
+        if (flat) {
+          if (flat.node.type === "folder") {
+            foundTarget = flat.node.id; // drop into this folder
+          } else {
+            foundTarget = flat.parentId; // drop as sibling (same parent)
+          }
+        }
+        break;
+      }
+    }
+
+    setDropTargetId(foundTarget);
+  }, []);
+
+  const endDrag = React.useCallback(async () => {
+    const dragged = draggedNodeRef.current;
+    const target = dropTargetId;
+
+    dragActiveRef.current = false;
+    draggedNodeRef.current = null;
+    dragOpacity.value = withTiming(0, { duration: 150 });
+    dragScale.value = withTiming(0.95, { duration: 150 });
+
+    // Perform the move if we have a valid target
+    if (dragged && target !== undefined && id) {
+      // Check: don't move to same parent
+      const currentParent = dragged.id.includes("/")
+        ? dragged.id.substring(0, dragged.id.lastIndexOf("/"))
+        : null;
+      if (target !== currentParent) {
+        const updatedTree = await moveNode(id, dragged.id, target);
+        setFileTree(updatedTree);
+        if (target) {
+          setExpandedFolders((prev) => new Set(prev).add(target));
+        }
+      }
+    }
+
+    setDraggedNode(null);
+    setDropTargetId(undefined);
+  }, [id, dropTargetId]);
+
+  // We need a ref to endDrag since PanResponder captures the initial closure
+  const endDragRef = React.useRef(endDrag);
+  endDragRef.current = endDrag;
+
+  const updateDragRef = React.useRef(updateDragPosition);
+  updateDragRef.current = updateDragPosition;
+
+  // PanResponder for the whole tree area — handles move/release after drag starts
+  const panResponder = React.useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => dragActiveRef.current,
+        onMoveShouldSetPanResponder: () => dragActiveRef.current,
+        onPanResponderMove: (_: GestureResponderEvent, gestureState: PanResponderGestureState) => {
+          updateDragRef.current(gestureState.moveY);
+        },
+        onPanResponderRelease: () => {
+          endDragRef.current();
+        },
+        onPanResponderTerminate: () => {
+          endDragRef.current();
+        },
+      }),
+    []
+  );
+
+  // Drag preview animated style
+  const dragPreviewStyle = useAnimatedStyle(() => ({
+    position: "absolute" as const,
+    left: 24,
+    right: 24,
+    top: dragY.value - 24,
+    opacity: dragOpacity.value,
+    transform: [{ scale: dragScale.value }],
+    zIndex: 9999,
+  }));
 
   // ── Load data ───────────────────────────────────────────────────
   React.useEffect(() => {
@@ -116,7 +318,6 @@ export default function ProjectScreen() {
     if (!trimmed || !id) return;
     const updatedTree = await addFolder(id, folderParentId, trimmed);
     setFileTree(updatedTree);
-    // Auto-expand the parent so the new folder is visible
     if (folderParentId) {
       setExpandedFolders((prev) => new Set(prev).add(folderParentId));
     }
@@ -135,7 +336,6 @@ export default function ProjectScreen() {
     if (!trimmed || !id) return;
     const updatedTree = await addFile(id, fileParentId, trimmed);
     setFileTree(updatedTree);
-    // Auto-expand the parent so the new file is visible
     if (fileParentId) {
       setExpandedFolders((prev) => new Set(prev).add(fileParentId));
     }
@@ -161,7 +361,7 @@ export default function ProjectScreen() {
     setRenameModalVisible(false);
   }, [id, nodeToRename, renameValue]);
 
-  // -- Move --
+  // -- Move (from dropdown) --
   const handleMoveOpen = React.useCallback((node: FileNode) => {
     setNodeToMove(node);
     setMoveModalVisible(true);
@@ -172,7 +372,6 @@ export default function ProjectScreen() {
       if (!nodeToMove || !id) return;
       const updatedTree = await moveNode(id, nodeToMove.id, targetFolderId);
       setFileTree(updatedTree);
-      // Auto-expand the target folder
       if (targetFolderId) {
         setExpandedFolders((prev) => new Set(prev).add(targetFolderId));
       }
@@ -190,7 +389,27 @@ export default function ProjectScreen() {
     setNodeToDelete(null);
   }, [id, nodeToDelete]);
 
+  // -- Measure tree container --
+  const onTreeLayout = React.useCallback(() => {
+    treeContainerRef.current?.measureInWindow((_x, y) => {
+      treeAbsoluteYRef.current = y;
+    });
+  }, []);
+
   if (!project) return null;
+
+  // Compute drop target label for the preview
+  let dropLabel = "";
+  if (draggedNode) {
+    if (dropTargetId === undefined) {
+      dropLabel = "";
+    } else if (dropTargetId === null) {
+      dropLabel = "→ / (root)";
+    } else {
+      const name = dropTargetId.split("/").pop() ?? dropTargetId;
+      dropLabel = `→ ${name}/`;
+    }
+  }
 
   return (
     <>
@@ -205,9 +424,9 @@ export default function ProjectScreen() {
         }}
       />
 
-      <View className="flex-1 bg-background">
+      <View className="flex-1 bg-background" {...panResponder.panHandlers}>
         {/* ── File tree ─────────────────────────────────────────── */}
-        <View className="flex-1 p-4">
+        <View className="flex-1 p-4" ref={treeContainerRef} onLayout={onTreeLayout}>
           {/* Root-level action buttons */}
           <View className="mb-2 flex-row gap-2">
             <Pressable
@@ -224,20 +443,49 @@ export default function ProjectScreen() {
             </Pressable>
           </View>
 
-          {fileTree.map((node) => (
-            <FileTreeNode
-              key={node.id}
-              node={node}
-              depth={0}
-              expandedFolders={expandedFolders}
-              onToggle={toggleFolder}
-              onNewFolder={handleNewFolderOpen}
-              onNewFile={handleNewFileOpen}
-              onDelete={setNodeToDelete}
-              onRename={handleRenameOpen}
-              onMove={handleMoveOpen}
-            />
-          ))}
+          <DragContext.Provider
+            value={{
+              draggedNodeId: draggedNode?.id ?? null,
+              dropTargetId,
+              registerLayout,
+              startDrag,
+            }}>
+            {fileTree.map((node) => (
+              <FileTreeNode
+                key={node.id}
+                node={node}
+                depth={0}
+                expandedFolders={expandedFolders}
+                onToggle={toggleFolder}
+                onNewFolder={handleNewFolderOpen}
+                onNewFile={handleNewFileOpen}
+                onDelete={setNodeToDelete}
+                onRename={handleRenameOpen}
+                onMove={handleMoveOpen}
+              />
+            ))}
+          </DragContext.Provider>
+
+          {/* ── Root drop zone ──────────────────────────────────── */}
+          {draggedNode && (
+            <View
+              className={`mt-1 rounded-lg border-2 border-dashed px-4 py-4 ${
+                dropTargetId === null
+                  ? "border-primary bg-primary/10"
+                  : "border-transparent"
+              }`}
+              onLayout={(e) => {
+                // Register root zone for drop targeting — handled by the
+                // "not over any node" fallback in updateDragPosition
+              }}>
+              <Text
+                className={`text-center text-sm ${
+                  dropTargetId === null ? "text-primary" : "text-muted-foreground/50"
+                }`}>
+                Drop here to move to root
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* ── Bottom action bar ─────────────────────────────────── */}
@@ -259,6 +507,27 @@ export default function ProjectScreen() {
             </Button>
           </View>
         </View>
+
+        {/* ── Drag preview overlay ──────────────────────────────── */}
+        <Animated.View style={dragPreviewStyle} pointerEvents="none">
+          <View className="flex-row items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-lg shadow-black/20">
+            <Icon
+              as={draggedNode?.type === "folder" ? FolderIcon : FileIcon}
+              className="size-5 text-primary"
+              size={20}
+            />
+            <View className="flex-1">
+              <Text className="text-base font-medium text-foreground" numberOfLines={1}>
+                {draggedNode?.name}
+              </Text>
+              {dropLabel ? (
+                <Text className="text-xs text-primary" numberOfLines={1}>
+                  {dropLabel}
+                </Text>
+              ) : null}
+            </View>
+          </View>
+        </Animated.View>
       </View>
 
       {/* ── New folder modal ────────────────────────────────────── */}
@@ -474,13 +743,92 @@ function FileTreeNode({
   const isExpanded = expandedFolders.has(node.id);
   const indent = depth * 20;
 
+  const { draggedNodeId, dropTargetId, registerLayout, startDrag } =
+    React.useContext(DragContext);
+
+  const isBeingDragged = draggedNodeId === node.id;
+  const isDropTarget =
+    draggedNodeId !== null && dropTargetId === node.id && node.type === "folder";
+
+  const rowRef = React.useRef<View>(null);
+
+  // Measure absolute position on layout for drag hit-testing
+  const handleLayout = React.useCallback(() => {
+    rowRef.current?.measureInWindow((_x, y, _w, h) => {
+      registerLayout(node.id, y, h);
+    });
+  }, [node.id, registerLayout]);
+
+  // Long-press on drag handle initiates drag
+  const longPressTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const touchStartY = React.useRef(0);
+
+  const handleDragHandleTouchStart = React.useCallback(
+    (e: GestureResponderEvent) => {
+      touchStartY.current = e.nativeEvent.pageY;
+      longPressTimer.current = setTimeout(() => {
+        startDrag(node, touchStartY.current);
+      }, 350);
+    },
+    [node, startDrag]
+  );
+
+  const handleDragHandleTouchMove = React.useCallback((e: GestureResponderEvent) => {
+    // Cancel long press if finger moves too much before activation
+    const dy = Math.abs(e.nativeEvent.pageY - touchStartY.current);
+    if (dy > 10 && longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }, []);
+
+  const handleDragHandleTouchEnd = React.useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }, []);
+
+  // Clean up timer on unmount
+  React.useEffect(() => {
+    return () => {
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+      }
+    };
+  }, []);
+
   return (
     <>
       <View
-        className="flex-row items-center rounded-lg border border-border bg-card"
+        ref={rowRef}
+        onLayout={handleLayout}
+        className={`flex-row items-center rounded-lg border bg-card ${
+          isDropTarget
+            ? "border-primary bg-primary/10"
+            : isBeingDragged
+              ? "border-border opacity-30"
+              : "border-border"
+        }`}
         style={{ marginLeft: indent, marginBottom: 4 }}>
+        {/* ── Drag handle ────────────────────────────────────────── */}
+        <View
+          className="items-center justify-center pl-2 py-3"
+          onTouchStart={handleDragHandleTouchStart}
+          onTouchMove={handleDragHandleTouchMove}
+          onTouchEnd={handleDragHandleTouchEnd}
+          onTouchCancel={handleDragHandleTouchEnd}>
+          <Icon
+            as={GripVerticalIcon}
+            className="size-4 text-muted-foreground/40"
+            size={16}
+          />
+        </View>
+
+        {/* ── Main row content (tap to toggle folder) ────────────── */}
         <Pressable
-          className="flex-1 flex-row items-center gap-3 px-4 py-3 active:opacity-80"
+          className="flex-1 flex-row items-center gap-3 px-2 py-3 active:opacity-80"
+          disabled={isBeingDragged}
           onPress={() => {
             if (isFolder) onToggle(node.id);
           }}>
@@ -507,61 +855,67 @@ function FileTreeNode({
         </Pressable>
 
         {/* ── Context menu ─────────────────────────────────────── */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Pressable hitSlop={8} className="px-3 py-3">
-              <Icon
-                as={EllipsisVerticalIcon}
-                className="size-4 text-muted-foreground"
-                size={16}
-              />
-            </Pressable>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            {isFolder && (
-              <>
-                <DropdownMenuItem
-                  onPress={() => {
-                    onNewFile(node.id);
-                  }}>
-                  <Icon as={FilePlusIcon} className="size-4 text-muted-foreground" size={16} />
-                  <Text>New file</Text>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onPress={() => {
-                    onNewFolder(node.id);
-                  }}>
-                  <Icon as={FolderPlusIcon} className="size-4 text-muted-foreground" size={16} />
-                  <Text>New folder</Text>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-              </>
-            )}
-            <DropdownMenuItem
-              onPress={() => {
-                onRename(node);
-              }}>
-              <Icon as={PencilIcon} className="size-4 text-muted-foreground" size={16} />
-              <Text>Rename</Text>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onPress={() => {
-                onMove(node);
-              }}>
-              <Icon as={MoveIcon} className="size-4 text-muted-foreground" size={16} />
-              <Text>Move to…</Text>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              variant="destructive"
-              onPress={() => {
-                onDelete(node);
-              }}>
-              <Icon as={Trash2Icon} className="size-4 text-destructive" size={16} />
-              <Text>Delete</Text>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {!draggedNodeId && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Pressable hitSlop={8} className="px-3 py-3">
+                <Icon
+                  as={EllipsisVerticalIcon}
+                  className="size-4 text-muted-foreground"
+                  size={16}
+                />
+              </Pressable>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {isFolder && (
+                <>
+                  <DropdownMenuItem
+                    onPress={() => {
+                      onNewFile(node.id);
+                    }}>
+                    <Icon as={FilePlusIcon} className="size-4 text-muted-foreground" size={16} />
+                    <Text>New file</Text>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onPress={() => {
+                      onNewFolder(node.id);
+                    }}>
+                    <Icon
+                      as={FolderPlusIcon}
+                      className="size-4 text-muted-foreground"
+                      size={16}
+                    />
+                    <Text>New folder</Text>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              <DropdownMenuItem
+                onPress={() => {
+                  onRename(node);
+                }}>
+                <Icon as={PencilIcon} className="size-4 text-muted-foreground" size={16} />
+                <Text>Rename</Text>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onPress={() => {
+                  onMove(node);
+                }}>
+                <Icon as={MoveIcon} className="size-4 text-muted-foreground" size={16} />
+                <Text>Move to…</Text>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant="destructive"
+                onPress={() => {
+                  onDelete(node);
+                }}>
+                <Icon as={Trash2Icon} className="size-4 text-destructive" size={16} />
+                <Text>Delete</Text>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </View>
 
       {/* Render children when expanded */}
