@@ -12,6 +12,9 @@ export default function EditorScreen() {
   const webViewRef = useRef<WebView>(null);
   const colorScheme = useColorScheme();
 
+  const fileExtension = fileId?.split(".").pop();
+  const language = fileExtension === "json" ? "json" : fileExtension === "lua" ? "lua" : "";
+
   // Try to use require for the asset
   const [htmlSource] = useState(require("../assets/editor/index.html"));
   const [initialContent, setInitialContent] = useState<string>("");
@@ -44,12 +47,18 @@ export default function EditorScreen() {
         if (window.setTheme) {
           window.setTheme("${colorScheme}");
         }
+        if (window.setLanguage) {
+          window.setLanguage("${language}");
+        }
         true;
       `);
     } else {
       webViewRef.current?.injectJavaScript(`
         if (window.setTheme) {
           window.setTheme("${colorScheme}");
+        }
+        if (window.setLanguage) {
+          window.setLanguage("${language}");
         }
         true;
       `);
@@ -62,10 +71,13 @@ export default function EditorScreen() {
         if (window.setEditorContent) {
           window.setEditorContent(${JSON.stringify(initialContent)});
         }
+        if (window.setLanguage) {
+          window.setLanguage("${language}");
+        }
         true;
       `);
     }
-  }, [initialContent]);
+  }, [initialContent, language]);
 
   useEffect(() => {
     webViewRef.current?.injectJavaScript(`
