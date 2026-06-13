@@ -12,7 +12,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true
     },
@@ -20,16 +22,26 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "org.artiekra.pewpewstudio"
     },
     "web": {
       "bundler": "metro",
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
-    "plugins": ["expo-router", "expo-asset"],
+    "plugins": [
+      "expo-router",
+      "expo-asset"
+    ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "6f262cbf-cfd6-4406-8b1c-0e2598fca5b5"
+      }
     }
   }
 }
