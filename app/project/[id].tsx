@@ -92,7 +92,7 @@ function flattenVisibleTree(
 type DragContextType = {
   draggedNodeId: string | null;
   dropTargetId: string | null | undefined; // null = root, undefined = none, string = folder id
-  registerLayout: (nodeId: string, absoluteY: number, height: number) => void;
+  registerLayout: (nodeId: string, relativeY: number, height: number) => void;
   startDrag: (node: FileNode, pageY: number) => void;
 };
 
@@ -146,8 +146,8 @@ export default function ProjectScreen() {
   const treeAbsoluteYRef = React.useRef(0);
   const treeContainerRef = React.useRef<View>(null);
 
-  // Store each node's absolute Y + height for hit-testing
-  const nodeLayoutsRef = React.useRef<Map<string, { absoluteY: number; height: number }>>(
+  // Store each node's relative Y + height for hit-testing
+  const nodeLayoutsRef = React.useRef<Map<string, { relativeY: number; height: number }>>(
     new Map()
   );
 
@@ -159,8 +159,8 @@ export default function ProjectScreen() {
     flatNodesRef.current = flattenVisibleTree(fileTree, 0, expandedFolders, null);
   }, [fileTree, expandedFolders]);
 
-  const registerLayout = React.useCallback((nodeId: string, absoluteY: number, height: number) => {
-    nodeLayoutsRef.current.set(nodeId, { absoluteY, height });
+  const registerLayout = React.useCallback((nodeId: string, relativeY: number, height: number) => {
+    nodeLayoutsRef.current.set(nodeId, { relativeY, height });
   }, []);
 
   // ── Drag pan responder ──────────────────────────────────────────
@@ -170,6 +170,10 @@ export default function ProjectScreen() {
   const draggedNodeRef = React.useRef<FileNode | null>(null);
 
   const startDrag = React.useCallback((node: FileNode, pageY: number) => {
+    treeContainerRef.current?.measureInWindow((_x, y) => {
+      treeAbsoluteYRef.current = y;
+    });
+
     draggedNodeRef.current = node;
     dragActiveRef.current = true;
     setDraggedNode(node);
@@ -189,7 +193,8 @@ export default function ProjectScreen() {
     let foundTarget: string | null | undefined = null; // default to root
 
     for (const [nodeId, layout] of nodeLayoutsRef.current) {
-      if (pageY >= layout.absoluteY && pageY < layout.absoluteY + layout.height) {
+      const absoluteY = treeAbsoluteYRef.current + layout.relativeY;
+      if (pageY >= absoluteY && pageY < absoluteY + layout.height) {
         // Finger is over this node
         if (nodeId === draggedId) {
           foundTarget = undefined; // over self — no target
@@ -751,11 +756,9 @@ function FileTreeNode({
 
   const rowRef = React.useRef<View>(null);
 
-  // Measure absolute position on layout for drag hit-testing
-  const handleLayout = React.useCallback(() => {
-    rowRef.current?.measureInWindow((_x, y, _w, h) => {
-      registerLayout(node.id, y, h);
-    });
+  // Use layout event to get Y position relative to the tree container
+  const handleLayout = React.useCallback((e: LayoutChangeEvent) => {
+    registerLayout(node.id, e.nativeEvent.layout.y, e.nativeEvent.layout.height);
   }, [node.id, registerLayout]);
 
   // Long-press on drag handle initiates drag
