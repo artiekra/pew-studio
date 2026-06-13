@@ -1,4 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as FileSystem from "expo-file-system/legacy";
 import { deleteProjectFiles, initProjectFiles } from "./fileSystem";
 
 // ── Types ────────────────────────────────────────────────────────────
@@ -12,7 +12,7 @@ export type Project = {
 
 // ── Storage keys ─────────────────────────────────────────────────────
 
-const PROJECTS_KEY = "pewpew_projects";
+const PROJECTS_FILE = `${FileSystem.documentDirectory}pewpew_projects.json`;
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -23,13 +23,19 @@ function generateId(): string {
 // ── CRUD ─────────────────────────────────────────────────────────────
 
 export async function getProjects(): Promise<Project[]> {
-  const raw = await AsyncStorage.getItem(PROJECTS_KEY);
-  if (!raw) return [];
-  return JSON.parse(raw) as Project[];
+  try {
+    const info = await FileSystem.getInfoAsync(PROJECTS_FILE);
+    if (!info.exists) return [];
+    const content = await FileSystem.readAsStringAsync(PROJECTS_FILE);
+    return JSON.parse(content) as Project[];
+  } catch (e) {
+    console.error("Failed to read projects file:", e);
+    return [];
+  }
 }
 
 async function saveProjects(projects: Project[]): Promise<void> {
-  await AsyncStorage.setItem(PROJECTS_KEY, JSON.stringify(projects));
+  await FileSystem.writeAsStringAsync(PROJECTS_FILE, JSON.stringify(projects, null, 2));
 }
 
 export async function createProject(name: string): Promise<Project> {
@@ -62,3 +68,4 @@ export async function renameProject(id: string, newName: string): Promise<void> 
     await saveProjects(projects);
   }
 }
+

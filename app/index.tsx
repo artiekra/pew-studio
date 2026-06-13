@@ -9,11 +9,33 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import { createProject, deleteProject, getProjects, type Project } from "@/lib/projects";
+import {
+  createProject,
+  deleteProject,
+  getProjects,
+  renameProject,
+  type Project,
+} from "@/lib/projects";
 import { Stack, useRouter } from "expo-router";
-import { FolderIcon, MoonStarIcon, PlusIcon, SunIcon, Trash2Icon } from "lucide-react-native";
+import {
+  FolderIcon,
+  FolderOpenIcon,
+  MoonStarIcon,
+  MoreVerticalIcon,
+  PencilIcon,
+  PlusIcon,
+  SunIcon,
+  Trash2Icon,
+} from "lucide-react-native";
 import { useColorScheme } from "nativewind";
 import * as React from "react";
 import { FlatList, Modal, Pressable, TextInput, View } from "react-native";
@@ -47,6 +69,8 @@ export default function ProjectsScreen() {
   const [modalVisible, setModalVisible] = React.useState(false);
   const [newName, setNewName] = React.useState("");
   const [projectToDelete, setProjectToDelete] = React.useState<Project | null>(null);
+  const [projectToRename, setProjectToRename] = React.useState<Project | null>(null);
+  const [renameValue, setRenameValue] = React.useState("");
 
   // Load projects on mount
   React.useEffect(() => {
@@ -76,6 +100,28 @@ export default function ProjectsScreen() {
     setProjectToDelete(null);
   }, [projectToDelete]);
 
+  const handleRename = React.useCallback((project: Project) => {
+    setRenameValue(project.name);
+    setProjectToRename(project);
+  }, []);
+
+  const confirmRename = React.useCallback(async () => {
+    if (!projectToRename) return;
+    const trimmed = renameValue.trim();
+    if (trimmed && trimmed !== projectToRename.name) {
+      await renameProject(projectToRename.id, trimmed);
+      setProjects((prev) =>
+        prev.map((p) =>
+          p.id === projectToRename.id
+            ? { ...p, name: trimmed, updatedAt: new Date().toISOString() }
+            : p
+        )
+      );
+    }
+    setProjectToRename(null);
+    setRenameValue("");
+  }, [projectToRename, renameValue]);
+
   if (!loaded) return null;
 
   return (
@@ -96,7 +142,9 @@ export default function ProjectsScreen() {
             data={projects}
             keyExtractor={(item) => item.id}
             contentContainerClassName="p-4 gap-3"
-            renderItem={({ item }) => <ProjectCard project={item} onDelete={handleDelete} />}
+            renderItem={({ item }) => (
+              <ProjectCard project={item} onDelete={handleDelete} onRename={handleRename} />
+            )}
           />
         )}
 
@@ -147,6 +195,41 @@ export default function ProjectsScreen() {
         </Pressable>
       </Modal>
 
+      {/* ── Rename-project modal ─────────────────────────────────── */}
+      <Modal
+        visible={!!projectToRename}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setProjectToRename(null)}>
+        <Pressable
+          className="flex-1 items-center justify-center bg-black/50 p-6"
+          onPress={() => setProjectToRename(null)}>
+          <Pressable
+            className="w-full max-w-sm gap-4 rounded-2xl border border-border bg-card p-6"
+            onPress={() => {}}>
+            <Text className="text-xl font-semibold text-foreground">Rename Project</Text>
+            <TextInput
+              className="rounded-lg border border-border bg-secondary px-4 py-3 text-base text-foreground"
+              placeholder="Project name"
+              placeholderTextColor="#888"
+              value={renameValue}
+              onChangeText={setRenameValue}
+              autoFocus
+              onSubmitEditing={confirmRename}
+              returnKeyType="done"
+            />
+            <View className="flex-row justify-end gap-3">
+              <Button variant="ghost" onPress={() => setProjectToRename(null)}>
+                <Text>Cancel</Text>
+              </Button>
+              <Button onPress={confirmRename} disabled={!renameValue.trim()}>
+                <Text>Rename</Text>
+              </Button>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
       {/* ── Delete-project alert dialog ───────────────────────────── */}
       <AlertDialog
         open={!!projectToDelete}
@@ -179,9 +262,11 @@ export default function ProjectsScreen() {
 function ProjectCard({
   project,
   onDelete,
+  onRename,
 }: {
   project: Project;
   onDelete: (project: Project) => void;
+  onRename: (project: Project) => void;
 }) {
   const router = useRouter();
 
@@ -198,13 +283,28 @@ function ProjectCard({
           Edited {formatDate(project.updatedAt)}
         </Text>
       </View>
-      <Button
-        size="icon"
-        variant="ghost"
-        className="rounded-full"
-        onPress={() => onDelete(project)}>
-        <Icon as={Trash2Icon} className="size-5 text-muted-foreground" size={18} />
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button size="icon" variant="ghost" className="rounded-full">
+            <Icon as={MoreVerticalIcon} className="size-5 text-muted-foreground" size={18} />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-48 p-2" align="end">
+          <DropdownMenuItem onPress={() => router.push(`/project/${project.id}`)}>
+            <Icon as={FolderOpenIcon} className="mr-2 size-4" />
+            <Text>Open Project</Text>
+          </DropdownMenuItem>
+          <DropdownMenuItem onPress={() => onRename(project)}>
+            <Icon as={PencilIcon} className="mr-2 size-4" />
+            <Text>Rename</Text>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem variant="destructive" onPress={() => onDelete(project)}>
+            <Icon as={Trash2Icon} className="mr-2 size-4" />
+            <Text>Delete</Text>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </Pressable>
   );
 }

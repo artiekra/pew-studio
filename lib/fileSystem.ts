@@ -1,13 +1,12 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as FileSystem from "expo-file-system/legacy";
 
 // ── Types ────────────────────────────────────────────────────────────
 
 export type FileNode = {
-  id: string;
+  id: string; // The relative path from the project root, e.g., "level.lua", "folder/file.txt", "folder"
   name: string;
   type: "file" | "folder";
-  /** Only meaningful for files – stores the text content. */
-  content?: string;
+  content?: string; // Optional text content (not loaded by default)
   children?: FileNode[];
 };
 
@@ -15,12 +14,10 @@ export type ProjectFileTree = FileNode[];
 
 // ── Storage helpers ──────────────────────────────────────────────────
 
-function storageKey(projectId: string): string {
-  return `pewpew_fs_${projectId}`;
-}
+const PROJECTS_DIR = `${FileSystem.documentDirectory}projects/`;
 
-function generateNodeId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+function getProjectDir(projectId: string): string {
+  return `${PROJECTS_DIR}${projectId}/`;
 }
 
 // ── Default template files ───────────────────────────────────────────
@@ -57,51 +54,67 @@ end
 return M
 `;
 
-export function createDefaultTree(): ProjectFileTree {
-  return [
-    {
-      id: generateNodeId(),
-      name: "manifest.json",
-      type: "file",
-      content: DEFAULT_MANIFEST,
-    },
-    {
-      id: generateNodeId(),
-      name: "level.lua",
-      type: "file",
-      content: DEFAULT_LEVEL_LUA,
-    },
-    {
-      id: generateNodeId(),
-      name: "simple_mesh.lua",
-      type: "file",
-      content: DEFAULT_SIMPLE_MESH_LUA,
-    },
-  ];
-}
-
 // ── CRUD ─────────────────────────────────────────────────────────────
 
 /** Retrieve the full file tree for a project. */
 export async function getFileTree(projectId: string): Promise<ProjectFileTree> {
-  const raw = await AsyncStorage.getItem(storageKey(projectId));
-  if (!raw) return [];
-  return JSON.parse(raw) as ProjectFileTree;
-}
+  const projectDir = getProjectDir(projectId);
+  const info = await FileSystem.getInfoAsync(projectDir);
+  if (!info.exists) return [];
 
-/** Persist a file tree. */
-export async function saveFileTree(projectId: string, tree: ProjectFileTree): Promise<void> {
-  await AsyncStorage.setItem(storageKey(projectId), JSON.stringify(tree));
+  async function readDirInfo(dirUri: string, basePath: string): Promise<FileNode[]> {
+    const contents = await FileSystem.readDirectoryAsync(dirUri);
+    const nodes: FileNode[] = [];
+
+    for (const name of contents) {
+      const fileUri = `${dirUri}${name}`;
+      const fileInfo = await FileSystem.getInfoAsync(fileUri);
+      const relativePath = basePath ? `${basePath}/${name}` : name;
+
+      if (fileInfo.isDirectory) {
+        nodes.push({
+          id: relativePath,
+          name,
+          type: "folder",
+          children: await readDirInfo(`${fileUri}/`, relativePath),
+        });
+      } else {
+        nodes.push({
+          id: relativePath,
+          name,
+          type: "file",
+        });
+      }
+    }
+
+    // Sort folders first, then alphabetically
+    return nodes.sort((a, b) => {
+      if (a.type === "folder" && b.type === "file") return -1;
+      if (a.type === "file" && b.type === "folder") return 1;
+      return a.name.localeCompare(b.name);
+    });
+  }
+
+  return readDirInfo(projectDir, "");
 }
 
 /** Initialize a project with the default template files. */
 export async function initProjectFiles(projectId: string): Promise<void> {
-  await saveFileTree(projectId, createDefaultTree());
+  const projectDir = getProjectDir(projectId);
+  await FileSystem.makeDirectoryAsync(projectDir, { intermediates: true });
+
+  await FileSystem.writeAsStringAsync(`${projectDir}manifest.json`, DEFAULT_MANIFEST);
+  await FileSystem.writeAsStringAsync(`${projectDir}level.lua`, DEFAULT_LEVEL_LUA);
+  await FileSystem.writeAsStringAsync(`${projectDir}simple_mesh.lua`, DEFAULT_SIMPLE_MESH_LUA);
 }
 
 /** Remove all stored file data for a project. */
 export async function deleteProjectFiles(projectId: string): Promise<void> {
-  await AsyncStorage.removeItem(storageKey(projectId));
+  const projectDir = getProjectDir(projectId);
+  const info = await FileSystem.getInfoAsync(projectDir);
+  if (info.exists) {
+    await FileSystem.deleteAsync(projectDir, { idempotent: true });
+  }
 }
 
 // ── Tree mutations ───────────────────────────────────────────────────
@@ -115,27 +128,12 @@ export async function addFolder(
   parentId: string | null,
   folderName: string
 ): Promise<ProjectFileTree> {
-  const tree = await getFileTree(projectId);
+  const projectDir = getProjectDir(projectId);
+  const relativePath = parentId ? `${parentId}/${folderName}` : folderName;
+  const targetDir = `${projectDir}${relativePath}`;
 
-  const newFolder: FileNode = {
-    id: generateNodeId(),
-    name: folderName,
-    type: "folder",
-    children: [],
-  };
-
-  if (parentId === null) {
-    tree.push(newFolder);
-  } else {
-    const parent = findNode(tree, parentId);
-    if (parent && parent.type === "folder") {
-      if (!parent.children) parent.children = [];
-      parent.children.push(newFolder);
-    }
-  }
-
-  await saveFileTree(projectId, tree);
-  return tree;
+  await FileSystem.makeDirectoryAsync(targetDir, { intermediates: true });
+  return getFileTree(projectId);
 }
 
 /**
@@ -143,32 +141,39 @@ export async function addFolder(
  * If it's a folder, all its children are removed recursively.
  */
 export async function removeNode(projectId: string, nodeId: string): Promise<ProjectFileTree> {
-  const tree = await getFileTree(projectId);
-  const filtered = removeFromTree(tree, nodeId);
-  await saveFileTree(projectId, filtered);
-  return filtered;
-}
+  const projectDir = getProjectDir(projectId);
+  const targetUri = `${projectDir}${nodeId}`;
 
-// ── Internal helpers ─────────────────────────────────────────────────
-
-function findNode(nodes: FileNode[], id: string): FileNode | null {
-  for (const node of nodes) {
-    if (node.id === id) return node;
-    if (node.children) {
-      const found = findNode(node.children, id);
-      if (found) return found;
-    }
+  const info = await FileSystem.getInfoAsync(targetUri);
+  if (info.exists) {
+    await FileSystem.deleteAsync(targetUri, { idempotent: true });
   }
-  return null;
+  return getFileTree(projectId);
 }
 
-function removeFromTree(nodes: FileNode[], id: string): FileNode[] {
-  return nodes
-    .filter((n) => n.id !== id)
-    .map((n) => {
-      if (n.children) {
-        return { ...n, children: removeFromTree(n.children, id) };
-      }
-      return n;
-    });
+/** Add a new file inside a parent */
+export async function addFile(
+  projectId: string,
+  parentId: string | null,
+  fileName: string,
+  content: string = ""
+): Promise<ProjectFileTree> {
+  const projectDir = getProjectDir(projectId);
+  const relativePath = parentId ? `${parentId}/${fileName}` : fileName;
+  const targetFile = `${projectDir}${relativePath}`;
+
+  await FileSystem.writeAsStringAsync(targetFile, content);
+  return getFileTree(projectId);
+}
+
+/** Read file content */
+export async function readFileContent(projectId: string, fileId: string): Promise<string> {
+  const uri = `${getProjectDir(projectId)}${fileId}`;
+  return await FileSystem.readAsStringAsync(uri);
+}
+
+/** Write file content */
+export async function writeFileContent(projectId: string, fileId: string, content: string): Promise<void> {
+  const uri = `${getProjectDir(projectId)}${fileId}`;
+  await FileSystem.writeAsStringAsync(uri, content);
 }
