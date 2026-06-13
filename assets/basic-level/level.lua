@@ -51,4 +51,3 @@ end
 
 -- Register the `level_tick` function to be called at every game tick.
 pewpew.add_update_callback(level_tick)
-

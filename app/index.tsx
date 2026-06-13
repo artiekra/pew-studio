@@ -14,7 +14,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
@@ -289,7 +288,7 @@ function ProjectCard({
             <Icon as={MoreVerticalIcon} className="size-5 text-muted-foreground" size={18} />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-48 p-2" align="end">
+        <DropdownMenuContent className="w-48 p-1" align="end">
           <DropdownMenuItem onPress={() => router.push(`/project/${project.id}`)}>
             <Icon as={FolderOpenIcon} className="mr-2 size-4" />
             <Text>Open Project</Text>
@@ -298,7 +297,6 @@ function ProjectCard({
             <Icon as={PencilIcon} className="mr-2 size-4" />
             <Text>Rename</Text>
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
           <DropdownMenuItem variant="destructive" onPress={() => onDelete(project)}>
             <Icon as={Trash2Icon} className="mr-2 size-4" />
             <Text>Delete</Text>
