@@ -9,8 +9,10 @@
     "web": "expo start -c --web",
     "clean": "rm -rf .expo node_modules",
     "format": "prettier --write .",
-    "build:preview": "mkdir -p assets/editor && cd source/editor && $npm_execpath run build && cd ../.. && cp source/editor/dist/index.html assets/editor/index.html && eas build --platform android --profile preview",
-    "build:production": "mkdir -p assets/editor && cd source/editor && $npm_execpath run build && cd ../.. && cp source/editor/dist/index.html assets/editor/index.html && eas build --platform android --profile production"
+    "doctor": "expo install --check",
+    "build:development": "mkdir -p $HOME/.cache/app-build-tmp && export TMPDIR=$HOME/.cache/app-build-tmp && export GRADLE_OPTS=\"-Djava.io.tmpdir=$HOME/.cache/app-build-tmp\" && eas build --platform android --profile development --local",
+    "build:production": "mkdir -p $HOME/.cache/app-build-tmp && export TMPDIR=$HOME/.cache/app-build-tmp && export GRADLE_OPTS=\"-Djava.io.tmpdir=$HOME/.cache/app-build-tmp\" && eas build --platform android --profile production --local",
+    "eas-build-pre-install": "mkdir -p assets/editor && cd source/editor && $npm_execpath install && $npm_execpath run build && cd ../.. && cp source/editor/dist/index.html assets/editor/index.html"
   },
   "dependencies": {
     "@react-navigation/native": "^7.0.0",
@@ -23,7 +25,9 @@
     "clsx": "^2.1.1",
     "expo": "~55.0.19",
     "expo-asset": "~55.0.17",
+    "expo-build-properties": "~55.0.14",
     "expo-constants": "~55.0.15",
+    "expo-dev-client": "~55.0.35",
     "expo-file-system": "~55.0.22",
     "expo-linking": "~55.0.14",
     "expo-router": "~55.0.13",
