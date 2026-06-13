@@ -1,5 +1,5 @@
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { Pressable, View } from "react-native";
+import { Pressable, View, useColorScheme } from "react-native";
 import { Icon } from "@/components/ui/icon";
 import { ArrowLeftIcon } from "lucide-react-native";
 import { WebView } from "react-native-webview";
@@ -10,6 +10,7 @@ export default function EditorScreen() {
   const { projectId, fileId } = useLocalSearchParams<{ projectId: string; fileId: string }>();
   const router = useRouter();
   const webViewRef = useRef<WebView>(null);
+  const colorScheme = useColorScheme();
 
   // Try to use require for the asset
   const [htmlSource] = useState(require("../assets/editor/index.html"));
@@ -40,6 +41,16 @@ export default function EditorScreen() {
         if (window.setEditorContent) {
           window.setEditorContent(${JSON.stringify(initialContent)});
         }
+        if (window.setTheme) {
+          window.setTheme("${colorScheme}");
+        }
+        true;
+      `);
+    } else {
+      webViewRef.current?.injectJavaScript(`
+        if (window.setTheme) {
+          window.setTheme("${colorScheme}");
+        }
         true;
       `);
     }
@@ -55,6 +66,15 @@ export default function EditorScreen() {
       `);
     }
   }, [initialContent]);
+
+  useEffect(() => {
+    webViewRef.current?.injectJavaScript(`
+      if (window.setTheme) {
+        window.setTheme("${colorScheme}");
+      }
+      true;
+    `);
+  }, [colorScheme]);
 
   return (
     <>

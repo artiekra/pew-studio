@@ -13,6 +13,8 @@
     "vite-plugin-singlefile": "^2.3.3"
   },
   "dependencies": {
+    "@fsegurai/codemirror-theme-basic-dark": "^6.2.5",
+    "@fsegurai/codemirror-theme-basic-light": "^6.2.5",
     "codemirror": "^6.0.2"
   }
 }
