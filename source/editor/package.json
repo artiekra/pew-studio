@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "chokidar-cli": "^3.0.0",
+    "npm-run-all2": "^8.0.4",
     "vite": "^8.0.12",
     "vite-plugin-singlefile": "^2.3.3"
   },

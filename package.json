@@ -3,12 +3,14 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
-    "dev": "expo start -c",
+    "dev": "mkdir -p assets/editor && cd source/editor && $npm_execpath run build && cd ../.. && cp source/editor/dist/index.html assets/editor/index.html && expo start -c",
     "android": "expo start -c --android",
     "ios": "expo start -c --ios",
     "web": "expo start -c --web",
     "clean": "rm -rf .expo node_modules",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "build:preview": "mkdir -p assets/editor && cd source/editor && $npm_execpath run build && cd ../.. && cp source/editor/dist/index.html assets/editor/index.html && eas build --platform android --profile preview",
+    "build:production": "mkdir -p assets/editor && cd source/editor && $npm_execpath run build && cd ../.. && cp source/editor/dist/index.html assets/editor/index.html && eas build --platform android --profile production"
   },
   "dependencies": {
     "@react-navigation/native": "^7.0.0",
