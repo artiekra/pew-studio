@@ -1,3 +1,4 @@
+import { Asset } from "expo-asset";
 import * as FileSystem from "expo-file-system/legacy";
 
 // ── Types ────────────────────────────────────────────────────────────
@@ -19,40 +20,6 @@ const PROJECTS_DIR = `${FileSystem.documentDirectory}projects/`;
 function getProjectDir(projectId: string): string {
   return `${PROJECTS_DIR}${projectId}/`;
 }
-
-// ── Default template files ───────────────────────────────────────────
-
-const DEFAULT_MANIFEST: string = JSON.stringify(
-  {
-    name: "Untitled",
-    version: "1.0.0",
-    entry_point: "level.lua",
-  },
-  null,
-  2
-);
-
-const DEFAULT_LEVEL_LUA = `\
-local mesh = require("simple_mesh")
-
-function pewpew.on_start()
-  -- Called once when the level starts
-end
-
-function pewpew.on_update()
-  -- Called every tick (30 fps)
-end
-`;
-
-const DEFAULT_SIMPLE_MESH_LUA = `\
-local M = {}
-
-function M.new_mesh()
-  -- Create and return a simple mesh
-end
-
-return M
-`;
 
 // ── CRUD ─────────────────────────────────────────────────────────────
 
@@ -103,9 +70,29 @@ export async function initProjectFiles(projectId: string): Promise<void> {
   const projectDir = getProjectDir(projectId);
   await FileSystem.makeDirectoryAsync(projectDir, { intermediates: true });
 
-  await FileSystem.writeAsStringAsync(`${projectDir}manifest.json`, DEFAULT_MANIFEST);
-  await FileSystem.writeAsStringAsync(`${projectDir}level.lua`, DEFAULT_LEVEL_LUA);
-  await FileSystem.writeAsStringAsync(`${projectDir}simple_mesh.lua`, DEFAULT_SIMPLE_MESH_LUA);
+  const manifestData = require("../assets/basic-level/manifest.json");
+  const levelAsset = Asset.fromModule(require("../assets/basic-level/level.lua"));
+  const meshAsset = Asset.fromModule(require("../assets/basic-level/background.mesh.lua"));
+
+  await Promise.all([
+    levelAsset.downloadAsync(),
+    meshAsset.downloadAsync(),
+  ]);
+
+  await Promise.all([
+    FileSystem.writeAsStringAsync(
+      `${projectDir}manifest.json`,
+      JSON.stringify(manifestData, null, 2)
+    ),
+    FileSystem.copyAsync({
+      from: levelAsset.localUri || levelAsset.uri,
+      to: `${projectDir}level.lua`,
+    }),
+    FileSystem.copyAsync({
+      from: meshAsset.localUri || meshAsset.uri,
+      to: `${projectDir}background.mesh.lua`,
+    }),
+  ]);
 }
 
 /** Remove all stored file data for a project. */
