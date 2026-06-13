@@ -68,4 +68,3 @@ export async function renameProject(id: string, newName: string): Promise<void> 
     await saveProjects(projects);
   }
 }
-

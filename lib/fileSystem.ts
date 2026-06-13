@@ -173,7 +173,11 @@ export async function readFileContent(projectId: string, fileId: string): Promis
 }
 
 /** Write file content */
-export async function writeFileContent(projectId: string, fileId: string, content: string): Promise<void> {
+export async function writeFileContent(
+  projectId: string,
+  fileId: string,
+  content: string
+): Promise<void> {
   const uri = `${getProjectDir(projectId)}${fileId}`;
   await FileSystem.writeAsStringAsync(uri, content);
 }

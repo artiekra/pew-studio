@@ -400,6 +400,17 @@ export default function ProjectScreen() {
     });
   }, []);
 
+  // -- Open file --
+  const handleOpenFile = React.useCallback(
+    (node: FileNode) => {
+      router.push({
+        pathname: "/editor",
+        params: { projectId: id, fileId: node.id },
+      });
+    },
+    [id, router]
+  );
+
   if (!project) return null;
 
   // Compute drop target label for the preview
@@ -466,6 +477,7 @@ export default function ProjectScreen() {
                 onDelete={setNodeToDelete}
                 onRename={handleRenameOpen}
                 onMove={handleMoveOpen}
+                onOpenFile={handleOpenFile}
               />
             ))}
           </DragContext.Provider>
@@ -474,9 +486,7 @@ export default function ProjectScreen() {
           {draggedNode && (
             <View
               className={`mt-1 rounded-lg border-2 border-dashed px-4 py-4 ${
-                dropTargetId === null
-                  ? "border-primary bg-primary/10"
-                  : "border-transparent"
+                dropTargetId === null ? "border-primary bg-primary/10" : "border-transparent"
               }`}
               onLayout={(e) => {
                 // Register root zone for drop targeting — handled by the
@@ -732,6 +742,7 @@ function FileTreeNode({
   onDelete,
   onRename,
   onMove,
+  onOpenFile,
 }: {
   node: FileNode;
   depth: number;
@@ -742,24 +753,26 @@ function FileTreeNode({
   onDelete: (node: FileNode) => void;
   onRename: (node: FileNode) => void;
   onMove: (node: FileNode) => void;
+  onOpenFile: (node: FileNode) => void;
 }) {
   const isFolder = node.type === "folder";
   const isExpanded = expandedFolders.has(node.id);
   const indent = depth * 20;
 
-  const { draggedNodeId, dropTargetId, registerLayout, startDrag } =
-    React.useContext(DragContext);
+  const { draggedNodeId, dropTargetId, registerLayout, startDrag } = React.useContext(DragContext);
 
   const isBeingDragged = draggedNodeId === node.id;
-  const isDropTarget =
-    draggedNodeId !== null && dropTargetId === node.id && node.type === "folder";
+  const isDropTarget = draggedNodeId !== null && dropTargetId === node.id && node.type === "folder";
 
   const rowRef = React.useRef<View>(null);
 
   // Use layout event to get Y position relative to the tree container
-  const handleLayout = React.useCallback((e: LayoutChangeEvent) => {
-    registerLayout(node.id, e.nativeEvent.layout.y, e.nativeEvent.layout.height);
-  }, [node.id, registerLayout]);
+  const handleLayout = React.useCallback(
+    (e: LayoutChangeEvent) => {
+      registerLayout(node.id, e.nativeEvent.layout.y, e.nativeEvent.layout.height);
+    },
+    [node.id, registerLayout]
+  );
 
   // Long-press on drag handle initiates drag
   const longPressTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -815,16 +828,12 @@ function FileTreeNode({
         style={{ marginLeft: indent, marginBottom: 4 }}>
         {/* ── Drag handle ────────────────────────────────────────── */}
         <View
-          className="items-center justify-center pl-2 py-3"
+          className="items-center justify-center py-3 pl-2"
           onTouchStart={handleDragHandleTouchStart}
           onTouchMove={handleDragHandleTouchMove}
           onTouchEnd={handleDragHandleTouchEnd}
           onTouchCancel={handleDragHandleTouchEnd}>
-          <Icon
-            as={GripVerticalIcon}
-            className="size-4 text-muted-foreground/40"
-            size={16}
-          />
+          <Icon as={GripVerticalIcon} className="size-4 text-muted-foreground/40" size={16} />
         </View>
 
         {/* ── Main row content (tap to toggle folder) ────────────── */}
@@ -833,6 +842,7 @@ function FileTreeNode({
           disabled={isBeingDragged}
           onPress={() => {
             if (isFolder) onToggle(node.id);
+            else onOpenFile(node);
           }}>
           {/* Icon */}
           <Icon
@@ -871,11 +881,7 @@ function FileTreeNode({
                     onPress={() => {
                       onNewFolder(node.id);
                     }}>
-                    <Icon
-                      as={FolderPlusIcon}
-                      className="size-4 text-muted-foreground"
-                      size={16}
-                    />
+                    <Icon as={FolderPlusIcon} className="size-4 text-muted-foreground" size={16} />
                     <Text>New folder</Text>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -924,6 +930,7 @@ function FileTreeNode({
             onDelete={onDelete}
             onRename={onRename}
             onMove={onMove}
+            onOpenFile={onOpenFile}
           />
         ))}
     </>
