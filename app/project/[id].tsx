@@ -32,12 +32,11 @@ import { getProjects, type Project } from "@/lib/projects";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import {
   ArrowLeftIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
   EllipsisVerticalIcon,
   FileIcon,
   FilePlusIcon,
   FolderIcon,
+  FolderOpenIcon,
   FolderPlusIcon,
   GripVerticalIcon,
   MoveIcon,
@@ -832,20 +831,9 @@ function FileTreeNode({
           onPress={() => {
             if (isFolder) onToggle(node.id);
           }}>
-          {/* Chevron for folders */}
-          {isFolder ? (
-            <Icon
-              as={isExpanded ? ChevronDownIcon : ChevronRightIcon}
-              className="size-4 text-muted-foreground"
-              size={16}
-            />
-          ) : (
-            <View style={{ width: 16 }} />
-          )}
-
           {/* Icon */}
           <Icon
-            as={isFolder ? FolderIcon : FileIcon}
+            as={isFolder ? (isExpanded ? FolderOpenIcon : FolderIcon) : FileIcon}
             className="size-5 text-muted-foreground"
             size={20}
           />
