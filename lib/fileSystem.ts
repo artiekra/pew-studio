@@ -177,3 +177,52 @@ export async function writeFileContent(projectId: string, fileId: string, conten
   const uri = `${getProjectDir(projectId)}${fileId}`;
   await FileSystem.writeAsStringAsync(uri, content);
 }
+
+/** Rename a file or folder. Returns updated tree. */
+export async function renameNode(
+  projectId: string,
+  nodeId: string,
+  newName: string
+): Promise<ProjectFileTree> {
+  const projectDir = getProjectDir(projectId);
+  const oldUri = `${projectDir}${nodeId}`;
+
+  // Compute new relative path: replace the last path segment
+  const parts = nodeId.split("/");
+  parts[parts.length - 1] = newName;
+  const newRelativePath = parts.join("/");
+  const newUri = `${projectDir}${newRelativePath}`;
+
+  await FileSystem.moveAsync({ from: oldUri, to: newUri });
+  return getFileTree(projectId);
+}
+
+/**
+ * Move a node (file or folder) to a new parent.
+ * Pass `null` as newParentId to move to root level.
+ */
+export async function moveNode(
+  projectId: string,
+  nodeId: string,
+  newParentId: string | null
+): Promise<ProjectFileTree> {
+  const projectDir = getProjectDir(projectId);
+  const oldUri = `${projectDir}${nodeId}`;
+
+  // Get just the file/folder name from the node id
+  const name = nodeId.split("/").pop()!;
+  const newRelativePath = newParentId ? `${newParentId}/${name}` : name;
+  const newUri = `${projectDir}${newRelativePath}`;
+
+  // Don't move if source and destination are the same
+  if (nodeId === newRelativePath) return getFileTree(projectId);
+
+  // Ensure target parent directory exists
+  if (newParentId) {
+    const parentUri = `${projectDir}${newParentId}`;
+    await FileSystem.makeDirectoryAsync(parentUri, { intermediates: true });
+  }
+
+  await FileSystem.moveAsync({ from: oldUri, to: newUri });
+  return getFileTree(projectId);
+}
