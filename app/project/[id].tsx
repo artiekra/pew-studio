@@ -178,7 +178,9 @@ export default function ProjectScreen() {
         {/* ── Bottom action bar ─────────────────────────────────── */}
         <View className="border-t border-border bg-card px-4 pb-9 pt-4">
           <View className="flex-row gap-3">
-            <Button className="flex-1 flex-row items-center justify-center gap-2">
+            <Button
+  className="flex-1 flex-row items-center justify-center gap-2"
+  onPress={() => router.push({ pathname: "/play", params: { projectId: id } })}>
               <Icon as={PlayIcon} className="size-4 text-primary-foreground" size={16} />
               <Text className="font-semibold text-primary-foreground">Play</Text>
             </Button>
