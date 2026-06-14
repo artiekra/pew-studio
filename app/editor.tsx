@@ -5,6 +5,8 @@ import { ArrowLeftIcon } from "lucide-react-native";
 import { WebView } from "react-native-webview";
 import { useEffect, useRef, useState } from "react";
 import { readFileContent, writeFileContent } from "@/lib/fileSystem";
+import { Asset } from "expo-asset";
+import { File } from "expo-file-system";
 
 export default function EditorScreen() {
   const { projectId, fileId } = useLocalSearchParams<{ projectId: string; fileId: string }>();
@@ -15,9 +17,22 @@ export default function EditorScreen() {
   const fileExtension = fileId?.split(".").pop();
   const language = fileExtension === "json" ? "json" : fileExtension === "lua" ? "lua" : "";
 
-  // Try to use require for the asset
-  const [htmlSource] = useState(require("../assets/editor/index.html"));
+  const [htmlSource, setHtmlSource] = useState<string>("");
   const [initialContent, setInitialContent] = useState<string>("");
+
+  useEffect(() => {
+    const loadHtml = async () => {
+      try {
+        const asset = Asset.fromModule(require("../assets/editor/index.html"));
+        await asset.downloadAsync();
+        const html = await new File(asset.localUri || asset.uri).text();
+        setHtmlSource(html);
+      } catch (e) {
+        console.error("Failed to load HTML:", e);
+      }
+    };
+    loadHtml();
+  }, []);
 
   useEffect(() => {
     if (projectId && fileId) {
@@ -101,15 +116,17 @@ export default function EditorScreen() {
         }}
       />
       <View className="flex-1 bg-background">
-        <WebView
-          ref={webViewRef}
-          source={htmlSource}
-          onMessage={handleMessage}
-          onLoadEnd={handleLoadEnd}
-          style={{ flex: 1, backgroundColor: "transparent" }}
-          containerStyle={{ backgroundColor: "transparent" }}
-          javaScriptEnabled={true}
-        />
+        {!!htmlSource && (
+          <WebView
+            ref={webViewRef}
+            source={{ html: htmlSource }}
+            onMessage={handleMessage}
+            onLoadEnd={handleLoadEnd}
+            style={{ flex: 1, backgroundColor: "transparent" }}
+            containerStyle={{ backgroundColor: "transparent" }}
+            javaScriptEnabled={true}
+          />
+        )}
       </View>
     </>
   );
