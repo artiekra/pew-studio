@@ -6,6 +6,7 @@ import { Icon } from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { ArrowLeftIcon, FileIcon, FilePlusIcon, FolderIcon, FolderPlusIcon, PlayIcon, RocketIcon, PackageIcon } from "lucide-react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { getProjects, type Project } from "@/lib/projects";
 import type { FileNode } from "@/lib/fileSystem";
@@ -22,6 +23,7 @@ export default function ProjectScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const [project, setProject] = useState<Project | null>(null);
+  const insets = useSafeAreaInsets();
 
   // File system state & operations
   const {
@@ -176,7 +178,10 @@ export default function ProjectScreen() {
         </View>
 
         {/* ── Bottom action bar ─────────────────────────────────── */}
-        <View className="border-t border-border bg-card px-4 pb-9 pt-4">
+        <View 
+          className="border-t border-border bg-card px-4 pt-4"
+          style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+        >
           <View className="flex-row gap-3">
             <Button
   className="flex-1 flex-row items-center justify-center gap-2"

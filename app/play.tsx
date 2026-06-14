@@ -6,10 +6,12 @@ import { Text } from "@/components/ui/text";
 import { Icon } from "@/components/ui/icon";
 import { ArrowLeftIcon, WrenchIcon, SettingsIcon, CodeIcon } from "lucide-react-native";
 import { useFocusEffect } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function PlayScreen() {
   const { projectId } = useLocalSearchParams<{ projectId: string }>();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   useFocusEffect(
     React.useCallback(() => {
@@ -28,14 +30,15 @@ export default function PlayScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <View className="flex-1 flex-row bg-background">
         {/* Sidebar */}
-        <View className="w-16 flex-col items-center gap-6 border-r border-border bg-card py-4">
+        <View 
+          className="flex-col items-center gap-6 border-r border-border bg-card py-4"
+          style={{ paddingLeft: Math.max(insets.left, 12), paddingRight: 12 }}
+        >
           <Pressable
-  onPress={async () => {
-    await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
-    // Replace the current route with the project screen to force a fresh mount
-    router.replace({ pathname: "/project/[id]", params: { id: projectId } });
-  }}
-  className="rounded-full bg-muted p-2 active:opacity-70">
+            onPress={() => {
+              router.back();
+            }}
+            className="rounded-full bg-muted p-2 active:opacity-70">
 
 
 

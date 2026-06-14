@@ -23,6 +23,14 @@
       },
       "package": "org.artiekra.pewpewstudio"
     },
+    "androidStatusBar": {
+      "translucent": true,
+      "backgroundColor": "transparent"
+    },
+    "androidNavigationBar": {
+      "visible": "sticky-immersive",
+      "backgroundColor": "transparent"
+    },
     "web": {
       "bundler": "metro",
       "output": "static",
