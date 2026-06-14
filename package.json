@@ -11,10 +11,13 @@
     "format": "prettier --write .",
     "doctor": "expo install --check",
     "build:development": "mkdir -p $HOME/.cache/app-build-tmp && export TMPDIR=$HOME/.cache/app-build-tmp && export GRADLE_OPTS=\"-Djava.io.tmpdir=$HOME/.cache/app-build-tmp\" && eas build --platform android --profile development --local",
+    "build:preview": "mkdir -p $HOME/.cache/app-build-tmp && export TMPDIR=$HOME/.cache/app-build-tmp && export GRADLE_OPTS=\"-Djava.io.tmpdir=$HOME/.cache/app-build-tmp\" && eas build --platform android --profile preview --local",
     "build:production": "mkdir -p $HOME/.cache/app-build-tmp && export TMPDIR=$HOME/.cache/app-build-tmp && export GRADLE_OPTS=\"-Djava.io.tmpdir=$HOME/.cache/app-build-tmp\" && eas build --platform android --profile production --local",
     "eas-build-pre-install": "mkdir -p assets/editor && cd source/editor && $npm_execpath install && $npm_execpath run build && cd ../.. && cp source/editor/dist/index.html assets/editor/index.html"
   },
   "dependencies": {
+    "@dr.pogodin/react-native-fs": "^2.38.2",
+    "@dr.pogodin/react-native-static-server": "^0.26.2",
     "@react-navigation/native": "^7.0.0",
     "@rn-primitives/alert-dialog": "^1.4.0",
     "@rn-primitives/dropdown-menu": "^1.4.0",
@@ -31,6 +34,7 @@
     "expo-file-system": "~55.0.22",
     "expo-linking": "~55.0.14",
     "expo-router": "~55.0.13",
+    "expo-screen-orientation": "~55.0.16",
     "expo-splash-screen": "~55.0.19",
     "expo-status-bar": "~55.0.5",
     "expo-system-ui": "~55.0.16",
