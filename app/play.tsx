@@ -1,11 +1,9 @@
 import React, { useRef, useState, useEffect } from "react";
-import { View, Pressable, ActivityIndicator } from "react-native";
+import { View, Pressable, ActivityIndicator, useWindowDimensions } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import * as ScreenOrientation from "expo-screen-orientation";
 import { Text } from "@/components/ui/text";
 import { Icon } from "@/components/ui/icon";
 import { ArrowLeftIcon, WrenchIcon, SettingsIcon, CodeIcon } from "lucide-react-native";
-import { useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
 import { Asset } from "expo-asset";
@@ -59,6 +57,11 @@ export default function PlayScreen() {
   const insets = useSafeAreaInsets();
   const webViewRef = useRef<WebView>(null);
   const [serverUrl, setServerUrl] = useState<string | null>(null);
+  
+  const { width, height } = useWindowDimensions();
+  // Ensure we get the landscape dimensions regardless of current physical orientation
+  const landscapeWidth = Math.max(width, height);
+  const landscapeHeight = Math.min(width, height);
 
   useEffect(() => {
     let server: Server | null = null;
@@ -102,15 +105,6 @@ export default function PlayScreen() {
     };
   }, []);
 
-  useFocusEffect(
-    React.useCallback(() => {
-      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
-      return () => {
-        ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
-      };
-    }, [])
-  );
-
   const onMessage = (event: any) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
@@ -145,54 +139,63 @@ export default function PlayScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ headerShown: false }} />
-      <View className="flex-1 flex-row bg-background">
-        {/* Sidebar */}
-        <View
-          className="flex-col items-center gap-6 border-r border-border bg-card py-4"
-          style={{ paddingLeft: Math.max(insets.left, 12), paddingRight: 12 }}>
-          <Pressable
-            onPress={() => router.back()}
-            className="rounded-full bg-muted p-2 active:opacity-70">
-            <Icon as={ArrowLeftIcon} className="size-6 text-foreground" size={24} />
-          </Pressable>
+      <Stack.Screen options={{ headerShown: false, orientation: "portrait" }} />
+      <View style={{ flex: 1, backgroundColor: 'black', alignItems: 'center', justifyContent: 'center' }}>
+        <View 
+          className="flex-row bg-background"
+          style={{
+            width: landscapeWidth,
+            height: landscapeHeight,
+            transform: [{ rotate: '90deg' }],
+          }}
+        >
+          {/* Sidebar */}
+          <View
+            className="flex-col items-center gap-6 border-r border-border bg-card py-4"
+            style={{ paddingLeft: Math.max(insets.top, 12), paddingRight: 12 }}>
+            <Pressable
+              onPress={() => router.back()}
+              className="rounded-full bg-muted p-2 active:opacity-70">
+              <Icon as={ArrowLeftIcon} className="size-6 text-foreground" size={24} />
+            </Pressable>
 
-          <Pressable className="p-2 active:opacity-70">
-            <Icon as={WrenchIcon} className="size-6 text-muted-foreground" size={24} />
-          </Pressable>
+            <Pressable className="p-2 active:opacity-70">
+              <Icon as={WrenchIcon} className="size-6 text-muted-foreground" size={24} />
+            </Pressable>
 
-          <Pressable className="p-2 active:opacity-70">
-            <Icon as={CodeIcon} className="size-6 text-muted-foreground" size={24} />
-          </Pressable>
+            <Pressable className="p-2 active:opacity-70">
+              <Icon as={CodeIcon} className="size-6 text-muted-foreground" size={24} />
+            </Pressable>
 
-          <View className="flex-1" />
+            <View className="flex-1" />
 
-          <Pressable className="p-2 active:opacity-70">
-            <Icon as={SettingsIcon} className="size-6 text-muted-foreground" size={24} />
-          </Pressable>
-        </View>
+            <Pressable className="p-2 active:opacity-70">
+              <Icon as={SettingsIcon} className="size-6 text-muted-foreground" size={24} />
+            </Pressable>
+          </View>
 
-        {/* Main Content Area */}
-        <View className="flex-1 overflow-hidden bg-background">
-          {serverUrl ? (
-            <WebView
-              ref={webViewRef}
-              source={{ uri: `${serverUrl}/pewpew.html` }}
-              className="flex-1 bg-transparent"
-              injectedJavaScript={injectedFetchOverride}
-              onMessage={onMessage}
-              javaScriptEnabled={true}
-              domStorageEnabled={true}
-              allowFileAccess={true}
-              allowFileAccessFromFileURLs={true}
-              allowUniversalAccessFromFileURLs={true}
-            />
-          ) : (
-            <View className="flex-1 items-center justify-center">
-              <ActivityIndicator size="large" />
-              <Text className="mt-4 text-muted-foreground">Starting local server...</Text>
-            </View>
-          )}
+          {/* Main Content Area */}
+          <View className="flex-1 overflow-hidden bg-background">
+            {serverUrl ? (
+              <WebView
+                ref={webViewRef}
+                source={{ uri: `${serverUrl}/pewpew.html` }}
+                className="flex-1 bg-transparent"
+                injectedJavaScript={injectedFetchOverride}
+                onMessage={onMessage}
+                javaScriptEnabled={true}
+                domStorageEnabled={true}
+                allowFileAccess={true}
+                allowFileAccessFromFileURLs={true}
+                allowUniversalAccessFromFileURLs={true}
+              />
+            ) : (
+              <View className="flex-1 items-center justify-center">
+                <ActivityIndicator size="large" />
+                <Text className="mt-4 text-muted-foreground">Starting local server...</Text>
+              </View>
+            )}
+          </View>
         </View>
       </View>
     </>
