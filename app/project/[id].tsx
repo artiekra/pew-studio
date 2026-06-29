@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { View, Pressable } from "react-native";
+import { View, Pressable, Alert } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Text } from "@/components/ui/text";
 import { Icon } from "@/components/ui/icon";
@@ -18,7 +18,7 @@ import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { getProjects, type Project } from "@/lib/projects";
-import type { FileNode } from "@/lib/fileSystem";
+import { exportProjectAsZip, type FileNode } from "@/lib/fileSystem";
 
 import { useProjectFileSystem } from "@/hooks/useProjectFileSystem";
 import { useProjectModals } from "@/hooks/useProjectModals";
@@ -196,7 +196,16 @@ export default function ProjectScreen() {
               <Icon as={RocketIcon} className="size-4 text-secondary-foreground" size={16} />
               <Text className="font-semibold text-secondary-foreground">Release</Text>
             </Button>
-            <Button variant="outline" className="flex-1 flex-row items-center justify-center gap-2">
+            <Button
+              variant="outline"
+              className="flex-1 flex-row items-center justify-center gap-2"
+              onPress={async () => {
+                try {
+                  await exportProjectAsZip(id, project.name);
+                } catch (err) {
+                  Alert.alert("Export Failed", String(err));
+                }
+              }}>
               <Icon as={PackageIcon} className="size-4 text-foreground" size={16} />
               <Text className="font-semibold text-foreground">Export</Text>
             </Button>
