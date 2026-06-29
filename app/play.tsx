@@ -9,12 +9,15 @@ import { WebView } from "react-native-webview";
 import { Asset } from "expo-asset";
 import * as FileSystem from "expo-file-system/legacy";
 import Server from "@dr.pogodin/react-native-static-server";
+import { getFileTree } from "@/lib/fileSystem";
+import JSZip from "jszip";
 
 const injectedFetchOverride = `
   (function() {
     if (window.__fetchIntercepted) return;
     window.__fetchIntercepted = true;
-    
+
+
     const originalFetch = window.fetch;
     window.fetch = async function(resource, init) {
       let url = '';
@@ -24,12 +27,21 @@ const injectedFetchOverride = `
         url = resource.url;
       }
 
-      if (url.includes('/custom_levels/')) {
+      if (url.includes('custom_levels')) {
         return new Promise((resolve, reject) => {
           const requestId = Math.random().toString(36).substring(7);
           
           window['__resolveFetch_' + requestId] = function(data) {
-            resolve(new Response(data.body, {
+            let body = data.body;
+            if (data.isBase64) {
+              const binary = atob(data.body);
+              const bytes = new Uint8Array(binary.length);
+              for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
+              }
+              body = bytes.buffer;
+            }
+            resolve(new Response(body, {
               status: data.status || 200,
               headers: data.headers || {}
             }));
@@ -47,6 +59,68 @@ const injectedFetchOverride = `
 
       return originalFetch(resource, init);
     };
+
+    const originalXHR = window.XMLHttpRequest;
+    window.XMLHttpRequest = function() {
+      const xhr = new originalXHR();
+      const originalOpen = xhr.open;
+      const originalSend = xhr.send;
+
+      xhr.open = function(method, url) {
+        this._method = method;
+        this._url = typeof url === 'string' ? url : url.toString();
+        return originalOpen.apply(this, arguments);
+      };
+
+      xhr.send = function(body) {
+        if (this._url && this._url.includes('custom_levels')) {
+          const url = this._url;
+          const requestId = Math.random().toString(36).substring(7);
+          const self = this;
+
+          window['__resolveFetch_' + requestId] = function(data) {
+            let responseBody = data.body;
+            if (data.isBase64) {
+              const binary = atob(data.body);
+              const bytes = new Uint8Array(binary.length);
+              for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
+              }
+              responseBody = bytes.buffer;
+            }
+
+            Object.defineProperty(self, 'readyState', { writable: true, value: 4 });
+            Object.defineProperty(self, 'status', { writable: true, value: data.status || 200 });
+            
+            if (self.responseType === 'arraybuffer' && data.isBase64) {
+              Object.defineProperty(self, 'response', { writable: true, value: responseBody });
+            } else {
+              Object.defineProperty(self, 'response', { writable: true, value: responseBody });
+              Object.defineProperty(self, 'responseText', { writable: true, value: responseBody });
+            }
+
+            if (self.onload) self.onload({ target: self });
+            if (self.onreadystatechange) self.onreadystatechange({ target: self });
+
+            delete window['__resolveFetch_' + requestId];
+          };
+
+          window.ReactNativeWebView.postMessage(JSON.stringify({
+            type: 'fetch',
+            requestId: requestId,
+            url: url
+          }));
+          return;
+        }
+        return originalSend.apply(this, arguments);
+      };
+      return xhr;
+    };
+    
+    // Copy constants
+    for (let key in originalXHR) {
+      window.XMLHttpRequest[key] = originalXHR[key];
+    }
   })();
   true;
 `;
@@ -82,10 +156,17 @@ export default function PlayScreen() {
         for (const asset of assets) {
           const [{ localUri }] = await Asset.loadAsync(asset.module);
           if (localUri) {
-            await FileSystem.copyAsync({
-              from: localUri,
-              to: wwwDir + asset.name,
-            });
+            if (asset.name === "pewpew.html") {
+              let html = await FileSystem.readAsStringAsync(localUri);
+              // Ensure we inject the script before any other scripts
+              html = html.replace('<script', '<script>' + injectedFetchOverride + '</script><script');
+              await FileSystem.writeAsStringAsync(wwwDir + asset.name, html);
+            } else {
+              await FileSystem.copyAsync({
+                from: localUri,
+                to: wwwDir + asset.name,
+              });
+            }
           }
         }
 
@@ -105,28 +186,97 @@ export default function PlayScreen() {
     };
   }, []);
 
-  const onMessage = (event: any) => {
+  const onMessage = async (event: any) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
       if (data.type === "fetch") {
         const { requestId, url } = data;
+        
         let responseBody: string = "";
+        let isBase64 = false;
         let status = 200;
 
-        if (url.includes("/custom_levels/get_public_levels_v2")) {
-          responseBody = "[]";
-        } else if (url.includes("/custom_levels/get_level")) {
-          responseBody = "";
-        } else if (url.includes("/custom_levels/get_level_manifest3")) {
-          responseBody = "";
+        const projectDir = `${FileSystem.documentDirectory}projects/${projectId}/`;
+
+        if (url.includes("custom_levels/get_public_levels_v2")) {
+          try {
+            const manifestContent = await FileSystem.readAsStringAsync(`${projectDir}manifest.json`);
+            const manifest = JSON.parse(manifestContent);
+            const levelJson = {
+              name: manifest.name || "Unknown",
+              author: "Anonymous",
+              account_id: "",
+              level_uuid: projectId,
+              date: 0,
+              publish_state: 0,
+              experimental: true,
+              leaderboard_kind: manifest.has_score_leaderboard ? 1 : 0,
+              v: 0,
+              diff: 0,
+              featured: false
+            };
+            responseBody = JSON.stringify([levelJson]);
+          } catch (e) {
+            console.error("Error get_public_levels_v2", e);
+            responseBody = "[]";
+          }
+        } else if (url.includes("custom_levels/get_level_manifest3")) {
+          try {
+            const manifestContent = await FileSystem.readAsStringAsync(`${projectDir}manifest.json`);
+            const manifest = JSON.parse(manifestContent);
+            const extra = {
+              name: manifest.name || "Unknown",
+              author: "Anonymous",
+              account_id: "",
+              level_uuid: projectId,
+              v: 0,
+              date: 0,
+              publish_state: 0,
+              experimental: true,
+              leaderboard_kind: manifest.has_score_leaderboard ? 1 : 0,
+              diff: 0,
+              featured: false
+            };
+            responseBody = JSON.stringify({ manifest, extra });
+          } catch (e) {
+            console.error("Error get_level_manifest3", e);
+            status = 500;
+          }
+        } else if (url.includes("custom_levels/get_level")) {
+          try {
+            const zip = new JSZip();
+            const tree = await getFileTree(projectId);
+
+            const addNodeToZip = async (nodes: any[]) => {
+              for (const node of nodes) {
+                if (node.type === "file" && node.id.endsWith(".lua")) {
+                  const fileUri = `${projectDir}${node.id}`;
+                  const contentBase64 = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.Base64 });
+                  zip.file(`level/${node.id}`, contentBase64, { base64: true });
+                } else if (node.type === "folder" && node.children) {
+                  await addNodeToZip(node.children);
+                }
+              }
+            };
+
+            await addNodeToZip(tree);
+            const zipBase64 = await zip.generateAsync({ type: "base64" });
+            responseBody = zipBase64;
+            isBase64 = true;
+          } catch (e) {
+            console.error("Error get_level", e);
+            status = 500;
+          }
         }
 
+        console.log(`[RN Intercept] Replying to ${url} (Status: ${status}, Base64: ${isBase64})`);
         webViewRef.current?.injectJavaScript(`
           if (window['__resolveFetch_${requestId}']) {
             window['__resolveFetch_${requestId}']({
-              body: ${JSON.stringify(responseBody)},
+              body: ${isBase64 ? '"' + responseBody + '"' : JSON.stringify(responseBody)},
+              isBase64: ${isBase64},
               status: ${status},
-              headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+              headers: { "Content-Type": ${isBase64 ? '"application/zip"' : '"application/json"'}, "Access-Control-Allow-Origin": "*" }
             });
           }
           true;
@@ -181,7 +331,7 @@ export default function PlayScreen() {
                 ref={webViewRef}
                 source={{ uri: `${serverUrl}/pewpew.html` }}
                 className="flex-1 bg-transparent"
-                injectedJavaScript={injectedFetchOverride}
+                injectedJavaScriptBeforeContentLoaded={injectedFetchOverride}
                 onMessage={onMessage}
                 javaScriptEnabled={true}
                 domStorageEnabled={true}
