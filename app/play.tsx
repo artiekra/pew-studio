@@ -17,6 +17,17 @@ const injectedFetchOverride = `
     if (window.__fetchIntercepted) return;
     window.__fetchIntercepted = true;
 
+    const originalLog = console.log;
+    console.log = function(...args) {
+      originalLog.apply(console, args);
+      const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
+      if (msg.includes('[🛑 error]')) {
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'error',
+          message: msg
+        }));
+      }
+    };
 
     const originalFetch = window.fetch;
     window.fetch = async function(resource, init) {
@@ -131,6 +142,7 @@ export default function PlayScreen() {
   const insets = useSafeAreaInsets();
   const webViewRef = useRef<WebView>(null);
   const [serverUrl, setServerUrl] = useState<string | null>(null);
+  const [levelError, setLevelError] = useState<string | null>(null);
   
   const { width, height } = useWindowDimensions();
   // Ensure we get the landscape dimensions regardless of current physical orientation
@@ -189,7 +201,9 @@ export default function PlayScreen() {
   const onMessage = async (event: any) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
-      if (data.type === "fetch") {
+      if (data.type === "error") {
+        setLevelError(data.message);
+      } else if (data.type === "fetch") {
         const { requestId, url } = data;
         
         let responseBody: string = "";
@@ -216,8 +230,9 @@ export default function PlayScreen() {
               featured: false
             };
             responseBody = JSON.stringify([levelJson]);
-          } catch (e) {
+          } catch (e: any) {
             console.error("Error get_public_levels_v2", e);
+            setLevelError("Error loading level manifest: " + e.message);
             responseBody = "[]";
           }
         } else if (url.includes("custom_levels/get_level_manifest3")) {
@@ -238,8 +253,9 @@ export default function PlayScreen() {
               featured: false
             };
             responseBody = JSON.stringify({ manifest, extra });
-          } catch (e) {
+          } catch (e: any) {
             console.error("Error get_level_manifest3", e);
+            setLevelError("Error parsing level manifest: " + e.message);
             status = 500;
           }
         } else if (url.includes("custom_levels/get_level")) {
@@ -263,8 +279,9 @@ export default function PlayScreen() {
             const zipBase64 = await zip.generateAsync({ type: "base64" });
             responseBody = zipBase64;
             isBase64 = true;
-          } catch (e) {
+          } catch (e: any) {
             console.error("Error get_level", e);
+            setLevelError("Error packaging level data: " + e.message);
             status = 500;
           }
         }
@@ -326,7 +343,15 @@ export default function PlayScreen() {
 
           {/* Main Content Area */}
           <View className="flex-1 overflow-hidden bg-background">
-            {serverUrl ? (
+            {levelError ? (
+              <View className="flex-1 items-center justify-center p-8 bg-card">
+                <Text className="text-xl font-bold text-destructive mb-4">Level Error</Text>
+                <Text className="text-center text-foreground">{levelError}</Text>
+                <Pressable onPress={() => router.back()} className="mt-8 px-6 py-3 bg-secondary rounded-lg active:opacity-80">
+                  <Text className="text-foreground font-medium">Dismiss</Text>
+                </Pressable>
+              </View>
+            ) : serverUrl ? (
               <WebView
                 ref={webViewRef}
                 source={{ uri: `${serverUrl}/pewpew.html` }}
