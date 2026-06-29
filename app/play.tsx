@@ -285,8 +285,6 @@ export default function PlayScreen() {
             status = 500;
           }
         }
-
-        console.log(`[RN Intercept] Replying to ${url} (Status: ${status}, Base64: ${isBase64})`);
         webViewRef.current?.injectJavaScript(`
           if (window['__resolveFetch_${requestId}']) {
             window['__resolveFetch_${requestId}']({
