@@ -4,7 +4,16 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Text } from "@/components/ui/text";
 import { Icon } from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
-import { ArrowLeftIcon, FileIcon, FilePlusIcon, FolderIcon, FolderPlusIcon, PlayIcon, RocketIcon, PackageIcon } from "lucide-react-native";
+import {
+  ArrowLeftIcon,
+  FileIcon,
+  FilePlusIcon,
+  FolderIcon,
+  FolderPlusIcon,
+  PlayIcon,
+  RocketIcon,
+  PackageIcon,
+} from "lucide-react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -38,15 +47,8 @@ export default function ProjectScreen() {
   } = useProjectFileSystem(id);
 
   // Modals state & operations
-  const {
-    activeModal,
-    closeModals,
-    openNewFolder,
-    openNewFile,
-    openRename,
-    openMove,
-    openDelete,
-  } = useProjectModals();
+  const { activeModal, closeModals, openNewFolder, openNewFile, openRename, openMove, openDelete } =
+    useProjectModals();
 
   // Drag and drop state & operations
   const {
@@ -178,14 +180,13 @@ export default function ProjectScreen() {
         </View>
 
         {/* ── Bottom action bar ─────────────────────────────────── */}
-        <View 
+        <View
           className="border-t border-border bg-card px-4 pt-4"
-          style={{ paddingBottom: Math.max(insets.bottom, 16) }}
-        >
+          style={{ paddingBottom: Math.max(insets.bottom, 16) }}>
           <View className="flex-row gap-3">
             <Button
-  className="flex-1 flex-row items-center justify-center gap-2"
-  onPress={() => router.push({ pathname: "/play", params: { projectId: id } })}>
+              className="flex-1 flex-row items-center justify-center gap-2"
+              onPress={() => router.push({ pathname: "/play", params: { projectId: id } })}>
               <Icon as={PlayIcon} className="size-4 text-primary-foreground" size={16} />
               <Text className="font-semibold text-primary-foreground">Play</Text>
             </Button>

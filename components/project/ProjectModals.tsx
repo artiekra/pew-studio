@@ -167,7 +167,12 @@ export function ProjectModals({
             className="w-full max-w-sm gap-4 rounded-2xl border border-border bg-card p-6"
             onPress={() => {}}>
             <Text className="text-xl font-semibold text-foreground">
-              Rename {activeModal?.type === "rename" ? (activeModal.node.type === "folder" ? "Folder" : "File") : ""}
+              Rename{" "}
+              {activeModal?.type === "rename"
+                ? activeModal.node.type === "folder"
+                  ? "Folder"
+                  : "File"
+                : ""}
             </Text>
             <TextInput
               className="rounded-lg border border-border bg-secondary px-4 py-3 text-base text-foreground"
@@ -244,10 +249,16 @@ export function ProjectModals({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Delete {activeModal?.type === "delete" ? (activeModal.node.type === "folder" ? "Folder" : "File") : ""}
+              Delete{" "}
+              {activeModal?.type === "delete"
+                ? activeModal.node.type === "folder"
+                  ? "Folder"
+                  : "File"
+                : ""}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{activeModal?.type === "delete" ? activeModal.node.name : ""}"?
+              Are you sure you want to delete "
+              {activeModal?.type === "delete" ? activeModal.node.name : ""}"?
               {activeModal?.type === "delete" && activeModal.node.type === "folder"
                 ? " All contents inside this folder will also be deleted."
                 : ""}{" "}

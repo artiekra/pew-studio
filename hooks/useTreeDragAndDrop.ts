@@ -39,7 +39,9 @@ export function useTreeDragAndDrop(
 
   const treeAbsoluteYRef = React.useRef(0);
   const treeContainerRef = React.useRef<View>(null);
-  const nodeLayoutsRef = React.useRef<Map<string, { relativeY: number; height: number }>>(new Map());
+  const nodeLayoutsRef = React.useRef<Map<string, { relativeY: number; height: number }>>(
+    new Map()
+  );
   const flatNodesRef = React.useRef<FlatNode[]>([]);
 
   React.useEffect(() => {
@@ -53,51 +55,57 @@ export function useTreeDragAndDrop(
   const dragActiveRef = React.useRef(false);
   const draggedNodeRef = React.useRef<FileNode | null>(null);
 
-  const startDrag = React.useCallback((node: FileNode, pageY: number) => {
-    treeContainerRef.current?.measureInWindow((_x, y) => {
-      treeAbsoluteYRef.current = y;
-    });
+  const startDrag = React.useCallback(
+    (node: FileNode, pageY: number) => {
+      treeContainerRef.current?.measureInWindow((_x, y) => {
+        treeAbsoluteYRef.current = y;
+      });
 
-    draggedNodeRef.current = node;
-    dragActiveRef.current = true;
-    setDraggedNode(node);
-    setDropTargetId(undefined);
-    dragY.value = pageY;
-    dragOpacity.value = withTiming(1, { duration: 150 });
-    dragScale.value = withSpring(1.03);
-  }, [dragY, dragOpacity, dragScale]);
+      draggedNodeRef.current = node;
+      dragActiveRef.current = true;
+      setDraggedNode(node);
+      setDropTargetId(undefined);
+      dragY.value = pageY;
+      dragOpacity.value = withTiming(1, { duration: 150 });
+      dragScale.value = withSpring(1.03);
+    },
+    [dragY, dragOpacity, dragScale]
+  );
 
-  const updateDragPosition = React.useCallback((pageY: number) => {
-    if (!dragActiveRef.current || !draggedNodeRef.current) return;
+  const updateDragPosition = React.useCallback(
+    (pageY: number) => {
+      if (!dragActiveRef.current || !draggedNodeRef.current) return;
 
-    dragY.value = pageY;
-    const draggedId = draggedNodeRef.current.id;
-    let foundTarget: string | null | undefined = null;
+      dragY.value = pageY;
+      const draggedId = draggedNodeRef.current.id;
+      let foundTarget: string | null | undefined = null;
 
-    for (const [nodeId, layout] of nodeLayoutsRef.current) {
-      const absoluteY = treeAbsoluteYRef.current + layout.relativeY;
-      if (pageY >= absoluteY && pageY < absoluteY + layout.height) {
-        if (nodeId === draggedId) {
-          foundTarget = undefined;
-          break;
-        }
-        if (nodeId.startsWith(`${draggedId}/`)) {
-          foundTarget = undefined;
-          break;
-        }
-        const flat = flatNodesRef.current.find((f) => f.node.id === nodeId);
-        if (flat) {
-          if (flat.node.type === "folder") {
-            foundTarget = flat.node.id;
-          } else {
-            foundTarget = flat.parentId;
+      for (const [nodeId, layout] of nodeLayoutsRef.current) {
+        const absoluteY = treeAbsoluteYRef.current + layout.relativeY;
+        if (pageY >= absoluteY && pageY < absoluteY + layout.height) {
+          if (nodeId === draggedId) {
+            foundTarget = undefined;
+            break;
           }
+          if (nodeId.startsWith(`${draggedId}/`)) {
+            foundTarget = undefined;
+            break;
+          }
+          const flat = flatNodesRef.current.find((f) => f.node.id === nodeId);
+          if (flat) {
+            if (flat.node.type === "folder") {
+              foundTarget = flat.node.id;
+            } else {
+              foundTarget = flat.parentId;
+            }
+          }
+          break;
         }
-        break;
       }
-    }
-    setDropTargetId(foundTarget);
-  }, [dragY]);
+      setDropTargetId(foundTarget);
+    },
+    [dragY]
+  );
 
   const endDrag = React.useCallback(async () => {
     const dragged = draggedNodeRef.current;

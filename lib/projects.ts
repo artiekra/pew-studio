@@ -6,6 +6,7 @@ import { deleteProjectFiles, initProjectFiles } from "./fileSystem";
 export type Project = {
   id: string;
   name: string;
+  color?: string;
   createdAt: string; // ISO 8601
   updatedAt: string; // ISO 8601
 };
@@ -64,6 +65,16 @@ export async function renameProject(id: string, newName: string): Promise<void> 
   const project = projects.find((p) => p.id === id);
   if (project) {
     project.name = newName;
+    project.updatedAt = new Date().toISOString();
+    await saveProjects(projects);
+  }
+}
+
+export async function updateProjectColor(id: string, color?: string): Promise<void> {
+  const projects = await getProjects();
+  const project = projects.find((p) => p.id === id);
+  if (project) {
+    project.color = color;
     project.updatedAt = new Date().toISOString();
     await saveProjects(projects);
   }

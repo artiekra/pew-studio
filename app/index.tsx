@@ -22,6 +22,7 @@ import {
   deleteProject,
   getProjects,
   renameProject,
+  updateProjectColor,
   type Project,
 } from "@/lib/projects";
 import { Stack, useRouter } from "expo-router";
@@ -61,6 +62,54 @@ function formatDate(iso: string): string {
 }
 
 // ── Main screen ──────────────────────────────────────────────────────
+
+const PROJECT_COLORS = [
+  {
+    name: "default",
+    value: undefined,
+    twBorder: "border-border",
+    twBg: "bg-card",
+    twIconBg: "bg-secondary",
+    twIconText: "text-foreground",
+    twCircle: "bg-secondary border-border",
+  },
+  {
+    name: "red",
+    value: "red",
+    twBorder: "border-red-500/50",
+    twBg: "bg-red-500/10",
+    twIconBg: "bg-red-500/20",
+    twIconText: "text-red-500",
+    twCircle: "bg-red-500 border-red-600",
+  },
+  {
+    name: "green",
+    value: "green",
+    twBorder: "border-green-500/50",
+    twBg: "bg-green-500/10",
+    twIconBg: "bg-green-500/20",
+    twIconText: "text-green-500",
+    twCircle: "bg-green-500 border-green-600",
+  },
+  {
+    name: "blue",
+    value: "blue",
+    twBorder: "border-blue-500/50",
+    twBg: "bg-blue-500/10",
+    twIconBg: "bg-blue-500/20",
+    twIconText: "text-blue-500",
+    twCircle: "bg-blue-500 border-blue-600",
+  },
+  {
+    name: "yellow",
+    value: "yellow",
+    twBorder: "border-yellow-500/50",
+    twBg: "bg-yellow-500/10",
+    twIconBg: "bg-yellow-500/20",
+    twIconText: "text-yellow-500",
+    twCircle: "bg-yellow-500 border-yellow-600",
+  },
+];
 
 export default function ProjectsScreen() {
   const [projects, setProjects] = React.useState<Project[]>([]);
@@ -121,6 +170,17 @@ export default function ProjectsScreen() {
     setRenameValue("");
   }, [projectToRename, renameValue]);
 
+  const handleColorChange = React.useCallback(async (project: Project, color?: string) => {
+    if (project.color !== color) {
+      await updateProjectColor(project.id, color);
+      setProjects((prev) =>
+        prev.map((p) =>
+          p.id === project.id ? { ...p, color, updatedAt: new Date().toISOString() } : p
+        )
+      );
+    }
+  }, []);
+
   if (!loaded) return null;
 
   return (
@@ -142,7 +202,12 @@ export default function ProjectsScreen() {
             keyExtractor={(item) => item.id}
             contentContainerClassName="p-4 gap-3"
             renderItem={({ item }) => (
-              <ProjectCard project={item} onDelete={handleDelete} onRename={handleRename} />
+              <ProjectCard
+                project={item}
+                onDelete={handleDelete}
+                onRename={handleRename}
+                onColorChange={handleColorChange}
+              />
             )}
           />
         )}
@@ -262,19 +327,22 @@ function ProjectCard({
   project,
   onDelete,
   onRename,
+  onColorChange,
 }: {
   project: Project;
   onDelete: (project: Project) => void;
   onRename: (project: Project) => void;
+  onColorChange: (project: Project, color?: string) => void;
 }) {
   const router = useRouter();
+  const colorDef = PROJECT_COLORS.find((c) => c.value === project.color) || PROJECT_COLORS[0];
 
   return (
     <Pressable
-      className="flex-row items-center gap-4 rounded-xl border border-border bg-card p-4 active:opacity-80"
+      className={`flex-row items-center gap-4 rounded-xl border p-4 active:opacity-80 ${colorDef.twBorder} ${colorDef.twBg}`}
       onPress={() => router.push(`/project/${project.id}`)}>
-      <View className="h-11 w-11 items-center justify-center rounded-lg bg-secondary">
-        <Icon as={FolderIcon} className="size-5 text-foreground" size={20} />
+      <View className={`h-11 w-11 items-center justify-center rounded-lg ${colorDef.twIconBg}`}>
+        <Icon as={FolderIcon} className={`size-5 ${colorDef.twIconText}`} size={20} />
       </View>
       <View className="flex-1">
         <Text className="text-base font-semibold text-foreground">{project.name}</Text>
@@ -289,6 +357,18 @@ function ProjectCard({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-48 p-1" align="end">
+          <View className="mb-1 flex-row justify-between border-b border-border px-2 py-2">
+            {PROJECT_COLORS.map((c) => (
+              <Pressable
+                key={c.name}
+                onPress={() => onColorChange(project, c.value)}
+                className={`size-6 items-center justify-center rounded-full border ${c.twCircle}`}>
+                {project.color === c.value && (
+                  <View className="size-2.5 rounded-full bg-background" />
+                )}
+              </Pressable>
+            ))}
+          </View>
           <DropdownMenuItem onPress={() => router.push(`/project/${project.id}`)}>
             <Icon as={FolderOpenIcon} className="mr-2 size-4" />
             <Text>Open Project</Text>

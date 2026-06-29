@@ -12,6 +12,7 @@ import {
 import {
   EllipsisVerticalIcon,
   FileIcon,
+  FileJsonIcon,
   FilePlusIcon,
   FolderIcon,
   FolderOpenIcon,
@@ -21,6 +22,7 @@ import {
   PencilIcon,
   Trash2Icon,
 } from "lucide-react-native";
+import { LuaIcon } from "@/components/ui/icons/LuaIcon";
 import type { FileNode } from "@/lib/fileSystem";
 import { DragContext } from "./DragContext";
 
@@ -131,7 +133,17 @@ export function FileTreeNode({
             else onOpenFile(node);
           }}>
           <Icon
-            as={isFolder ? (isExpanded ? FolderOpenIcon : FolderIcon) : FileIcon}
+            as={
+              isFolder
+                ? isExpanded
+                  ? FolderOpenIcon
+                  : FolderIcon
+                : node.name.endsWith(".lua")
+                  ? LuaIcon
+                  : node.name.endsWith(".json")
+                    ? FileJsonIcon
+                    : FileIcon
+            }
             className="size-5 text-muted-foreground"
             size={20}
           />

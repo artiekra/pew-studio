@@ -74,10 +74,7 @@ export async function initProjectFiles(projectId: string): Promise<void> {
   const levelAsset = Asset.fromModule(require("../assets/basic-level/level.lua"));
   const meshAsset = Asset.fromModule(require("../assets/basic-level/background.mesh.lua"));
 
-  await Promise.all([
-    levelAsset.downloadAsync(),
-    meshAsset.downloadAsync(),
-  ]);
+  await Promise.all([levelAsset.downloadAsync(), meshAsset.downloadAsync()]);
 
   await Promise.all([
     FileSystem.writeAsStringAsync(

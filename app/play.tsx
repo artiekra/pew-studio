@@ -143,7 +143,7 @@ export default function PlayScreen() {
   const webViewRef = useRef<WebView>(null);
   const [serverUrl, setServerUrl] = useState<string | null>(null);
   const [levelError, setLevelError] = useState<string | null>(null);
-  
+
   const { width, height } = useWindowDimensions();
   // Ensure we get the landscape dimensions regardless of current physical orientation
   const landscapeWidth = Math.max(width, height);
@@ -171,7 +171,10 @@ export default function PlayScreen() {
             if (asset.name === "pewpew.html") {
               let html = await FileSystem.readAsStringAsync(localUri);
               // Ensure we inject the script before any other scripts
-              html = html.replace('<script', '<script>' + injectedFetchOverride + '</script><script');
+              html = html.replace(
+                "<script",
+                "<script>" + injectedFetchOverride + "</script><script"
+              );
               await FileSystem.writeAsStringAsync(wwwDir + asset.name, html);
             } else {
               await FileSystem.copyAsync({
@@ -182,7 +185,7 @@ export default function PlayScreen() {
           }
         }
 
-        const cleanWwwDir = wwwDir.replace(/^file:\/\//, '');
+        const cleanWwwDir = wwwDir.replace(/^file:\/\//, "");
         server = new Server({ port: 9000, fileDir: cleanWwwDir });
         const url = await server.start();
         setServerUrl(url);
@@ -205,7 +208,7 @@ export default function PlayScreen() {
         setLevelError(data.message);
       } else if (data.type === "fetch") {
         const { requestId, url } = data;
-        
+
         let responseBody: string = "";
         let isBase64 = false;
         let status = 200;
@@ -214,7 +217,9 @@ export default function PlayScreen() {
 
         if (url.includes("custom_levels/get_public_levels_v2")) {
           try {
-            const manifestContent = await FileSystem.readAsStringAsync(`${projectDir}manifest.json`);
+            const manifestContent = await FileSystem.readAsStringAsync(
+              `${projectDir}manifest.json`
+            );
             const manifest = JSON.parse(manifestContent);
             const levelJson = {
               name: manifest.name || "Unknown",
@@ -227,7 +232,7 @@ export default function PlayScreen() {
               leaderboard_kind: manifest.has_score_leaderboard ? 1 : 0,
               v: 0,
               diff: 0,
-              featured: false
+              featured: false,
             };
             responseBody = JSON.stringify([levelJson]);
           } catch (e: any) {
@@ -237,7 +242,9 @@ export default function PlayScreen() {
           }
         } else if (url.includes("custom_levels/get_level_manifest3")) {
           try {
-            const manifestContent = await FileSystem.readAsStringAsync(`${projectDir}manifest.json`);
+            const manifestContent = await FileSystem.readAsStringAsync(
+              `${projectDir}manifest.json`
+            );
             const manifest = JSON.parse(manifestContent);
             const extra = {
               name: manifest.name || "Unknown",
@@ -250,7 +257,7 @@ export default function PlayScreen() {
               experimental: true,
               leaderboard_kind: manifest.has_score_leaderboard ? 1 : 0,
               diff: 0,
-              featured: false
+              featured: false,
             };
             responseBody = JSON.stringify({ manifest, extra });
           } catch (e: any) {
@@ -267,7 +274,9 @@ export default function PlayScreen() {
               for (const node of nodes) {
                 if (node.type === "file" && node.id.endsWith(".lua")) {
                   const fileUri = `${projectDir}${node.id}`;
-                  const contentBase64 = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.Base64 });
+                  const contentBase64 = await FileSystem.readAsStringAsync(fileUri, {
+                    encoding: FileSystem.EncodingType.Base64,
+                  });
                   zip.file(`level/${node.id}`, contentBase64, { base64: true });
                 } else if (node.type === "folder" && node.children) {
                   await addNodeToZip(node.children);
@@ -305,15 +314,20 @@ export default function PlayScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false, orientation: "portrait" }} />
-      <View style={{ flex: 1, backgroundColor: 'black', alignItems: 'center', justifyContent: 'center' }}>
-        <View 
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: "black",
+          alignItems: "center",
+          justifyContent: "center",
+        }}>
+        <View
           className="flex-row bg-background"
           style={{
             width: landscapeWidth,
             height: landscapeHeight,
-            transform: [{ rotate: '90deg' }],
-          }}
-        >
+            transform: [{ rotate: "90deg" }],
+          }}>
           {/* Sidebar */}
           <View
             className="flex-col items-center gap-6 border-r border-border bg-card py-4"
@@ -342,11 +356,13 @@ export default function PlayScreen() {
           {/* Main Content Area */}
           <View className="flex-1 overflow-hidden bg-background">
             {levelError ? (
-              <View className="flex-1 items-center justify-center p-8 bg-card">
-                <Text className="text-xl font-bold text-destructive mb-4">Level Error</Text>
+              <View className="flex-1 items-center justify-center bg-card p-8">
+                <Text className="mb-4 text-xl font-bold text-destructive">Level Error</Text>
                 <Text className="text-center text-foreground">{levelError}</Text>
-                <Pressable onPress={() => router.back()} className="mt-8 px-6 py-3 bg-secondary rounded-lg active:opacity-80">
-                  <Text className="text-foreground font-medium">Dismiss</Text>
+                <Pressable
+                  onPress={() => router.back()}
+                  className="mt-8 rounded-lg bg-secondary px-6 py-3 active:opacity-80">
+                  <Text className="font-medium text-foreground">Dismiss</Text>
                 </Pressable>
               </View>
             ) : serverUrl ? (

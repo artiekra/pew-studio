@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import {
   addFile,
   addFolder,
@@ -30,38 +30,53 @@ export function useProjectFileSystem(projectId: string | undefined) {
     });
   }, []);
 
-  const createFolder = useCallback(async (parentId: string | null, name: string) => {
-    if (!projectId) return;
-    const updatedTree = await addFolder(projectId, parentId, name);
-    setFileTree(updatedTree);
-    if (parentId) setExpandedFolders((prev) => new Set(prev).add(parentId));
-  }, [projectId]);
+  const createFolder = useCallback(
+    async (parentId: string | null, name: string) => {
+      if (!projectId) return;
+      const updatedTree = await addFolder(projectId, parentId, name);
+      setFileTree(updatedTree);
+      if (parentId) setExpandedFolders((prev) => new Set(prev).add(parentId));
+    },
+    [projectId]
+  );
 
-  const createFile = useCallback(async (parentId: string | null, name: string) => {
-    if (!projectId) return;
-    const updatedTree = await addFile(projectId, parentId, name);
-    setFileTree(updatedTree);
-    if (parentId) setExpandedFolders((prev) => new Set(prev).add(parentId));
-  }, [projectId]);
+  const createFile = useCallback(
+    async (parentId: string | null, name: string) => {
+      if (!projectId) return;
+      const updatedTree = await addFile(projectId, parentId, name);
+      setFileTree(updatedTree);
+      if (parentId) setExpandedFolders((prev) => new Set(prev).add(parentId));
+    },
+    [projectId]
+  );
 
-  const rename = useCallback(async (nodeId: string, newName: string) => {
-    if (!projectId) return;
-    const updatedTree = await renameNode(projectId, nodeId, newName);
-    setFileTree(updatedTree);
-  }, [projectId]);
+  const rename = useCallback(
+    async (nodeId: string, newName: string) => {
+      if (!projectId) return;
+      const updatedTree = await renameNode(projectId, nodeId, newName);
+      setFileTree(updatedTree);
+    },
+    [projectId]
+  );
 
-  const move = useCallback(async (nodeId: string, targetFolderId: string | null) => {
-    if (!projectId) return;
-    const updatedTree = await moveNode(projectId, nodeId, targetFolderId);
-    setFileTree(updatedTree);
-    if (targetFolderId) setExpandedFolders((prev) => new Set(prev).add(targetFolderId));
-  }, [projectId]);
+  const move = useCallback(
+    async (nodeId: string, targetFolderId: string | null) => {
+      if (!projectId) return;
+      const updatedTree = await moveNode(projectId, nodeId, targetFolderId);
+      setFileTree(updatedTree);
+      if (targetFolderId) setExpandedFolders((prev) => new Set(prev).add(targetFolderId));
+    },
+    [projectId]
+  );
 
-  const remove = useCallback(async (nodeId: string) => {
-    if (!projectId) return;
-    const updatedTree = await removeNode(projectId, nodeId);
-    setFileTree(updatedTree);
-  }, [projectId]);
+  const remove = useCallback(
+    async (nodeId: string) => {
+      if (!projectId) return;
+      const updatedTree = await removeNode(projectId, nodeId);
+      setFileTree(updatedTree);
+    },
+    [projectId]
+  );
 
   return {
     fileTree,
