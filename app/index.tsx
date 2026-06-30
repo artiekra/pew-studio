@@ -27,8 +27,11 @@ import {
 } from "@/lib/projects";
 import { Stack, useRouter } from "expo-router";
 import {
+  DownloadIcon,
+  FilePlusIcon,
   FolderIcon,
   FolderOpenIcon,
+  GlobeIcon,
   MoreVerticalIcon,
   PencilIcon,
   PlusIcon,
@@ -127,6 +130,7 @@ export default function ProjectsScreen() {
   const [projects, setProjects] = React.useState<Project[]>([]);
   const [loaded, setLoaded] = React.useState(false);
   const [modalVisible, setModalVisible] = React.useState(false);
+  const [actionModalVisible, setActionModalVisible] = React.useState(false);
   const [newName, setNewName] = React.useState("");
   const [projectToDelete, setProjectToDelete] = React.useState<Project | null>(null);
   const [projectToRename, setProjectToRename] = React.useState<Project | null>(null);
@@ -229,11 +233,84 @@ export default function ProjectsScreen() {
           <Button
             size="icon"
             className="h-14 w-14 rounded-full shadow-lg"
-            onPress={() => setModalVisible(true)}>
+            onPress={() => setActionModalVisible(true)}>
             <Icon as={PlusIcon} className="size-6 text-primary-foreground" size={24} />
           </Button>
         </View>
       </View>
+
+      {/* ── Action selection modal ───────────────────────────────── */}
+      <Modal
+        visible={actionModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setActionModalVisible(false)}>
+        <Pressable
+          className="flex-1 items-center justify-center bg-black/50 p-6"
+          onPress={() => setActionModalVisible(false)}>
+          <Pressable
+            className="w-full max-w-md gap-4 rounded-2xl border border-border bg-card p-6"
+            onPress={() => {}}>
+            <View className="mb-2">
+              <Text className="text-xl font-bold text-foreground">Create Project</Text>
+              <Text className="text-sm text-muted-foreground mt-1">
+                Choose how you want to start your new level.
+              </Text>
+            </View>
+
+            <Pressable
+              className="flex-row items-center gap-4 rounded-xl border border-border bg-secondary/50 p-4 active:opacity-80"
+              onPress={() => {
+                setActionModalVisible(false);
+                setModalVisible(true);
+              }}>
+              <View className="h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                <Icon as={FilePlusIcon} className="size-6 text-primary" size={24} />
+              </View>
+              <View className="flex-1">
+                <Text className="text-base font-semibold text-foreground">Create new level</Text>
+                <Text className="mt-0.5 text-sm text-muted-foreground">
+                  Start a fresh level from scratch
+                </Text>
+              </View>
+            </Pressable>
+
+            <Pressable
+              className="flex-row items-center gap-4 rounded-xl border border-border bg-secondary/50 p-4 active:opacity-80"
+              onPress={() => {}}>
+              <View className="h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                <Icon as={DownloadIcon} className="size-6 text-primary" size={24} />
+              </View>
+              <View className="flex-1">
+                <Text className="text-base font-semibold text-foreground">Import existing</Text>
+                <Text className="mt-0.5 text-sm text-muted-foreground">
+                  Load a level from your device
+                </Text>
+              </View>
+            </Pressable>
+
+            <Pressable
+              className="flex-row items-center gap-4 rounded-xl border border-border bg-secondary/50 p-4 active:opacity-80"
+              onPress={() => {}}>
+              <View className="h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                <Icon as={GlobeIcon} className="size-6 text-primary" size={24} />
+              </View>
+              <View className="flex-1">
+                <Text className="text-base font-semibold text-foreground">Community levels</Text>
+                <Text className="mt-0.5 text-sm text-muted-foreground">
+                  Browse open-source projects
+                </Text>
+              </View>
+            </Pressable>
+
+            <View className="mt-2 flex-row justify-end">
+              <Button variant="ghost" onPress={() => setActionModalVisible(false)}>
+                <Text>Cancel</Text>
+              </Button>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       {/* ── Create-project modal ─────────────────────────────────── */}
       <Modal
