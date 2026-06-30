@@ -1,5 +1,5 @@
 import * as FileSystem from "expo-file-system/legacy";
-import { deleteProjectFiles, initProjectFiles } from "./fileSystem";
+import { deleteProjectFiles, initProjectFiles, importProjectFiles } from "./fileSystem";
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -51,6 +51,21 @@ export async function createProject(name: string): Promise<Project> {
   projects.unshift(project); // newest first
   await saveProjects(projects);
   await initProjectFiles(project.id);
+  return project;
+}
+
+export async function importProject(name: string, zipUri: string): Promise<Project> {
+  const projects = await getProjects();
+  const now = new Date().toISOString();
+  const project: Project = {
+    id: generateId(),
+    name,
+    createdAt: now,
+    updatedAt: now,
+  };
+  projects.unshift(project); // newest first
+  await saveProjects(projects);
+  await importProjectFiles(project.id, zipUri);
   return project;
 }
 

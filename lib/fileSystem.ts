@@ -284,3 +284,32 @@ export async function exportProjectAsZip(projectId: string, projectName: string)
     }
   }
 }
+
+/** Import project files from a ZIP archive */
+export async function importProjectFiles(projectId: string, zipUri: string): Promise<void> {
+  const projectDir = getProjectDir(projectId);
+  await FileSystem.makeDirectoryAsync(projectDir, { intermediates: true });
+
+  const zipContent = await FileSystem.readAsStringAsync(zipUri, {
+    encoding: FileSystem.EncodingType.Base64,
+  });
+
+  const zip = await JSZip.loadAsync(zipContent, { base64: true });
+
+  for (const [relativePath, file] of Object.entries(zip.files)) {
+    if (file.dir) {
+      await FileSystem.makeDirectoryAsync(`${projectDir}${relativePath}`, { intermediates: true });
+    } else {
+      const content = await file.async("base64");
+      // Make sure the parent directory exists
+      const parts = relativePath.split("/");
+      parts.pop(); // remove file name
+      if (parts.length > 0) {
+        await FileSystem.makeDirectoryAsync(`${projectDir}${parts.join("/")}`, { intermediates: true });
+      }
+      await FileSystem.writeAsStringAsync(`${projectDir}${relativePath}`, content, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+    }
+  }
+}

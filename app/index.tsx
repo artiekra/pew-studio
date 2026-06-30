@@ -23,9 +23,11 @@ import {
   getProjects,
   renameProject,
   updateProjectColor,
+  importProject,
   type Project,
 } from "@/lib/projects";
 import { Stack, useRouter } from "expo-router";
+import * as DocumentPicker from "expo-document-picker";
 import {
   DownloadIcon,
   FilePlusIcon,
@@ -48,7 +50,7 @@ function SettingsButton() {
   const router = useRouter();
   return (
     <Button
-      onPress={() => router.push('/settings')}
+      onPress={() => router.push("/settings")}
       size="icon"
       variant="ghost"
       className="ios:size-9 rounded-full web:mx-4">
@@ -153,6 +155,27 @@ export default function ProjectsScreen() {
     setModalVisible(false);
   }, [newName]);
 
+  const handleImport = React.useCallback(async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ["application/zip", "application/x-zip-compressed", "multipart/x-zip"],
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled || !result.assets.length) return;
+
+      const asset = result.assets[0];
+      const name = asset.name ? asset.name.replace(/\.zip$/i, "") : "Imported Project";
+
+      setActionModalVisible(false);
+
+      const project = await importProject(name, asset.uri);
+      setProjects((prev) => [project, ...prev]);
+    } catch (e) {
+      console.error("Import failed:", e);
+    }
+  }, []);
+
   const handleDelete = React.useCallback((project: Project) => {
     setProjectToDelete(project);
   }, []);
@@ -253,9 +276,9 @@ export default function ProjectsScreen() {
             onPress={() => {}}>
             <View className="mb-2">
               <Text className="text-xl font-bold text-foreground">Create Project</Text>
-              <Text className="text-sm text-muted-foreground mt-1">
-                Choose how you want to start your new level.
-              </Text>
+              {/* <Text className="text-sm text-muted-foreground mt-1"> */}
+              {/*   Choose how you want to start your new level. */}
+              {/* </Text> */}
             </View>
 
             <Pressable
@@ -277,7 +300,7 @@ export default function ProjectsScreen() {
 
             <Pressable
               className="flex-row items-center gap-4 rounded-xl border border-border bg-secondary/50 p-4 active:opacity-80"
-              onPress={() => {}}>
+              onPress={handleImport}>
               <View className="h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                 <Icon as={DownloadIcon} className="size-6 text-primary" size={24} />
               </View>
@@ -475,4 +498,3 @@ function ProjectCard({
     </Pressable>
   );
 }
-
