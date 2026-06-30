@@ -75,7 +75,7 @@ export async function initProjectFiles(projectId: string): Promise<void> {
 
   const manifestData = require("../assets/basic-level/manifest.json");
   const levelAsset = Asset.fromModule(require("../assets/basic-level/level.lua"));
-  const meshAsset = Asset.fromModule(require("../assets/basic-level/background.mesh.lua"));
+  const meshAsset = Asset.fromModule(require("../assets/basic-level/background_mesh.lua"));
 
   await Promise.all([levelAsset.downloadAsync(), meshAsset.downloadAsync()]);
 
@@ -90,7 +90,7 @@ export async function initProjectFiles(projectId: string): Promise<void> {
     }),
     FileSystem.copyAsync({
       from: meshAsset.localUri || meshAsset.uri,
-      to: `${projectDir}background.mesh.lua`,
+      to: `${projectDir}background_mesh.lua`,
     }),
   ]);
 }
@@ -305,7 +305,9 @@ export async function importProjectFiles(projectId: string, zipUri: string): Pro
       const parts = relativePath.split("/");
       parts.pop(); // remove file name
       if (parts.length > 0) {
-        await FileSystem.makeDirectoryAsync(`${projectDir}${parts.join("/")}`, { intermediates: true });
+        await FileSystem.makeDirectoryAsync(`${projectDir}${parts.join("/")}`, {
+          intermediates: true,
+        });
       }
       await FileSystem.writeAsStringAsync(`${projectDir}${relativePath}`, content, {
         encoding: FileSystem.EncodingType.Base64,

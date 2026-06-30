@@ -202,6 +202,7 @@ export default function ProjectScreen() {
               onPress={async () => {
                 try {
                   await exportProjectAsZip(id, project.name);
+                  Alert.alert("Export Successful", "Your level has been successfully exported.");
                 } catch (err) {
                   Alert.alert("Export Failed", String(err));
                 }
