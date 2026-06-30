@@ -3,6 +3,8 @@ import * as FileSystem from "expo-file-system/legacy";
 // ── Types ────────────────────────────────────────────────────────────
 
 export type AiSettings = {
+  enabled: boolean;
+  provider?: string;
   apiUrl: string;
   apiKey: string;
 };
@@ -19,8 +21,10 @@ export async function getAiSettings(): Promise<AiSettings | null> {
     if (!info.exists) return null;
     const content = await FileSystem.readAsStringAsync(AI_SETTINGS_FILE);
     const parsed = JSON.parse(content) as AiSettings;
-    // Consider it unconfigured if both fields are empty
-    if (!parsed.apiUrl && !parsed.apiKey) return null;
+    // Default enabled to true for backward compatibility if it's missing but we have url/key
+    if (parsed.enabled === undefined) {
+      parsed.enabled = !!parsed.apiUrl && !!parsed.apiKey;
+    }
     return parsed;
   } catch (e) {
     console.error("Failed to read AI settings:", e);
@@ -34,5 +38,5 @@ export async function saveAiSettings(settings: AiSettings): Promise<void> {
 
 export async function isAiConfigured(): Promise<boolean> {
   const settings = await getAiSettings();
-  return settings !== null && !!settings.apiUrl && !!settings.apiKey;
+  return settings !== null && settings.enabled && !!settings.apiUrl && !!settings.apiKey;
 }

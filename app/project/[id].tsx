@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { View, Pressable, Alert } from "react-native";
+import { View, Pressable, Alert, Modal } from "react-native";
 import { Stack, useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { Text } from "@/components/ui/text";
 import { Icon } from "@/components/ui/icon";
@@ -17,6 +17,7 @@ import {
   AlertCircleIcon,
   CheckCircleIcon,
   XCircleIcon,
+  XIcon,
 } from "lucide-react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -48,6 +49,7 @@ export default function ProjectScreen() {
   const router = useRouter();
   const [project, setProject] = useState<Project | null>(null);
   const [aiConfigured, setAiConfigured] = useState<boolean | null>(null);
+  const [aiModalVisible, setAiModalVisible] = useState(false);
   const [exportStatus, setExportStatus] = useState<{
     status: "success" | "error";
     message: string;
@@ -148,29 +150,12 @@ export default function ProjectScreen() {
           headerRight: () => (
             <Pressable
               onPress={() => {
-                if (!aiConfigured) {
-                  Alert.alert(
-                    "AI Not Configured",
-                    "Set up a cloud AI provider to use AI features.",
-                    [
-                      { text: "Cancel", style: "cancel" },
-                      {
-                        text: "Go to AI Settings",
-                        onPress: () => router.push("/ai-settings"),
-                      },
-                    ]
-                  );
-                }
+                setAiModalVisible(true);
               }}
               className="ios:mr-0 mr-2 p-1"
               hitSlop={8}>
               <View className="flex-row items-center">
                 <Icon as={SparklesIcon} className="size-6 text-foreground" size={24} />
-                {aiConfigured === false && (
-                  <View className="absolute -right-1 -top-1">
-                    <Icon as={AlertCircleIcon} className="size-3 text-destructive" size={12} />
-                  </View>
-                )}
               </View>
             </Pressable>
           ),
@@ -346,6 +331,52 @@ export default function ProjectScreen() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* ── AI Chat Modal ───────────────────────────────── */}
+      <Modal
+        visible={aiModalVisible}
+        animationType="slide"
+        onRequestClose={() => setAiModalVisible(false)}>
+        <View
+          className="flex-1 bg-background"
+          style={{ paddingTop: insets.top, paddingBottom: Math.max(insets.bottom, 16) }}>
+          <View className="flex-row items-center justify-between px-4 py-3">
+            <Text className="text-xl font-bold text-foreground">AI Assistant</Text>
+            <Pressable onPress={() => setAiModalVisible(false)} className="-mr-2 p-2">
+              <Icon as={XIcon} className="size-6 text-foreground" size={24} />
+            </Pressable>
+          </View>
+
+          {!aiConfigured ? (
+            <View className="-mt-20 flex-1 items-center justify-center">
+              <Icon as={SparklesIcon} className="mb-6 size-16 text-muted-foreground" size={64} />
+              <Text className="mb-2 text-center text-xl font-bold text-foreground">
+                AI Not Configured
+              </Text>
+              <Text className="mb-8 px-8 text-center text-base text-muted-foreground">
+                Set up a cloud AI provider or download a local model to unlock AI features in your
+                projects.
+              </Text>
+              <Button
+                onPress={() => {
+                  setAiModalVisible(false);
+                  router.push("/ai-settings");
+                }}
+                className="w-full max-w-[250px] flex-row justify-center">
+                <Text className="font-semibold text-primary-foreground">Go to Settings</Text>
+              </Button>
+            </View>
+          ) : (
+            <View className="-mt-20 flex-1 items-center justify-center">
+              <Icon as={SparklesIcon} className="mb-6 size-16 text-primary" size={64} />
+              <Text className="mb-2 text-center text-xl font-bold text-foreground">Chat</Text>
+              <Text className="px-8 text-center text-base text-muted-foreground">
+                AI is configured. Chat interface coming soon.
+              </Text>
+            </View>
+          )}
+        </View>
+      </Modal>
     </>
   );
 }
