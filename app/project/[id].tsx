@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { View, Pressable, Alert } from "react-native";
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { Text } from "@/components/ui/text";
 import { Icon } from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
@@ -13,9 +13,13 @@ import {
   PlayIcon,
   RocketIcon,
   PackageIcon,
+  SparklesIcon,
+  AlertCircleIcon,
 } from "lucide-react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import { isAiConfigured } from "@/lib/aiSettings";
 
 import { getProjects, type Project } from "@/lib/projects";
 import { exportProjectAsZip, type FileNode } from "@/lib/fileSystem";
@@ -32,7 +36,15 @@ export default function ProjectScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const [project, setProject] = useState<Project | null>(null);
+  const [aiConfigured, setAiConfigured] = useState<boolean | null>(null);
   const insets = useSafeAreaInsets();
+
+  // Re-check AI config every time this screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      isAiConfigured().then(setAiConfigured);
+    }, [])
+  );
 
   // File system state & operations
   const {
@@ -116,6 +128,35 @@ export default function ProjectScreen() {
           headerLeft: () => (
             <Pressable onPress={() => router.back()} className="ios:ml-0 ml-2 mr-6 p-1" hitSlop={8}>
               <Icon as={ArrowLeftIcon} className="size-6 text-foreground" size={24} />
+            </Pressable>
+          ),
+          headerRight: () => (
+            <Pressable
+              onPress={() => {
+                if (!aiConfigured) {
+                  Alert.alert(
+                    "AI Not Configured",
+                    "Set up a cloud AI provider to use AI features.",
+                    [
+                      { text: "Cancel", style: "cancel" },
+                      {
+                        text: "Go to AI Settings",
+                        onPress: () => router.push("/ai-settings"),
+                      },
+                    ]
+                  );
+                }
+              }}
+              className="ios:mr-0 mr-2 p-1"
+              hitSlop={8}>
+              <View className="flex-row items-center">
+                <Icon as={SparklesIcon} className="size-6 text-foreground" size={24} />
+                {aiConfigured === false && (
+                  <View className="absolute -right-1 -top-1">
+                    <Icon as={AlertCircleIcon} className="size-3 text-destructive" size={12} />
+                  </View>
+                )}
+              </View>
             </Pressable>
           ),
         }}
