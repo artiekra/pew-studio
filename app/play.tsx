@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-import { View, Pressable, ActivityIndicator, useWindowDimensions } from "react-native";
+import { View, Pressable, ActivityIndicator, useWindowDimensions, ScrollView } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Text } from "@/components/ui/text";
 import { Icon } from "@/components/ui/icon";
@@ -17,17 +17,36 @@ const injectedFetchOverride = `
     if (window.__fetchIntercepted) return;
     window.__fetchIntercepted = true;
 
-    const originalLog = console.log;
-    console.log = function(...args) {
-      originalLog.apply(console, args);
-      const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
-      if (msg.includes('[🛑 error]')) {
-        window.ReactNativeWebView.postMessage(JSON.stringify({
-          type: 'error',
-          message: msg
-        }));
-      }
-    };
+    ['log', 'info', 'warn', 'error', 'debug'].forEach(level => {
+      const original = console[level];
+      console[level] = function(...args) {
+        original.apply(console, args);
+        try {
+          const msg = args.map(a => {
+            if (a === null) return 'null';
+            if (a === undefined) return 'undefined';
+            if (a instanceof Error) return a.message + '\\n' + a.stack;
+            if (typeof a === 'object') {
+              try { return JSON.stringify(a); } catch(e) { return String(a); }
+            }
+            return String(a);
+          }).join(' ');
+
+          if (level === 'log' && msg.includes('[🛑 error]')) {
+            window.ReactNativeWebView.postMessage(JSON.stringify({
+              type: 'error',
+              message: msg
+            }));
+          }
+
+          window.ReactNativeWebView.postMessage(JSON.stringify({
+            type: 'console_log',
+            level: level,
+            message: msg
+          }));
+        } catch(e) {}
+      };
+    });
 
     const originalFetch = window.fetch;
     window.fetch = async function(resource, init) {
@@ -136,6 +155,13 @@ const injectedFetchOverride = `
   true;
 `;
 
+type LogEntry = {
+  id: string;
+  level: string;
+  message: string;
+  timestamp: number;
+};
+
 export default function PlayScreen() {
   const { projectId } = useLocalSearchParams<{ projectId: string }>();
   const router = useRouter();
@@ -144,6 +170,7 @@ export default function PlayScreen() {
   const [serverUrl, setServerUrl] = useState<string | null>(null);
   const [levelError, setLevelError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"game" | "console">("game");
+  const [logs, setLogs] = useState<LogEntry[]>([]);
 
   const { width, height } = useWindowDimensions();
   // Ensure we get the landscape dimensions regardless of current physical orientation
@@ -207,6 +234,13 @@ export default function PlayScreen() {
       const data = JSON.parse(event.nativeEvent.data);
       if (data.type === "error") {
         setLevelError(data.message);
+      } else if (data.type === "console_log") {
+        setLogs(prev => [...prev, {
+          id: Math.random().toString(),
+          level: data.level,
+          message: data.message,
+          timestamp: Date.now()
+        }]);
       } else if (data.type === "fetch") {
         const { requestId, url } = data;
 
@@ -398,11 +432,31 @@ export default function PlayScreen() {
 
             <View
               style={{ flex: 1, display: activeTab === "console" ? "flex" : "none" }}
-              className="items-center justify-center p-4">
-              <Text className="mb-2 text-xl font-bold text-foreground">Console</Text>
-              <Text className="text-center text-muted-foreground">
-                Console view boilerplate. Implement logs here in the future.
-              </Text>
+              className="bg-card">
+              <View className="border-b border-border p-4">
+                <Text className="text-xl font-bold text-foreground">Console</Text>
+              </View>
+              <ScrollView className="flex-1 p-4">
+                {logs.length === 0 ? (
+                  <Text className="mt-4 text-center text-muted-foreground">No logs yet...</Text>
+                ) : (
+                  logs.map(log => (
+                    <View key={log.id} className="mb-1">
+                      <Text
+                        className={`font-mono text-sm ${
+                          log.level === "error"
+                            ? "text-destructive"
+                            : log.level === "warn"
+                              ? "text-yellow-500"
+                              : "text-foreground"
+                        }`}
+                        selectable={true}>
+                        {log.message}
+                      </Text>
+                    </View>
+                  ))
+                )}
+              </ScrollView>
             </View>
           </View>
         </View>
