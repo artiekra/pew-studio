@@ -13,6 +13,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   ArrowLeftIcon,
   SaveIcon,
   ServerIcon,
@@ -31,7 +40,7 @@ import {
 } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { getAiSettings, saveAiSettings, type AiSettings } from "@/lib/aiSettings";
+import { getAiSettings, saveAiSettings, testAiConnection, type AiSettings } from "@/lib/aiSettings";
 
 const AI_PROVIDERS = [
   { label: "OpenAI", value: "openai", url: "https://api.openai.com/v1", domain: "openai.com" },
@@ -52,7 +61,8 @@ export default function AiSettingsScreen() {
   const [apiUrl, setApiUrl] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [loading, setLoading] = useState(true);
-  const [saved, setSaved] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<{ status: "success" | "error"; message: string } | null>(null);
+  const [isTesting, setIsTesting] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -70,20 +80,28 @@ export default function AiSettingsScreen() {
   const handleSave = useCallback(async () => {
     if (enabled) {
       if (!apiUrl.trim()) {
-        Alert.alert("Missing API URL", "Please enter an API URL.");
+        setSaveStatus({ status: "error", message: "Please enter an API URL." });
         return;
       }
       if (!apiKey.trim()) {
-        Alert.alert("Missing API Key", "Please enter an API key.");
+        setSaveStatus({ status: "error", message: "Please enter an API key." });
+        return;
+      }
+      
+      setIsTesting(true);
+      const testResult = await testAiConnection(apiUrl.trim(), apiKey.trim(), provider);
+      setIsTesting(false);
+      
+      if (!testResult.success) {
+        setSaveStatus({ status: "error", message: "Connection failed: " + testResult.message });
         return;
       }
     }
     try {
       await saveAiSettings({ enabled, provider, apiUrl: apiUrl.trim(), apiKey: apiKey.trim() });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+      setSaveStatus({ status: "success", message: "AI details were saved successfully." });
     } catch (err) {
-      Alert.alert("Error", "Failed to save AI settings.");
+      setSaveStatus({ status: "error", message: "Failed to save AI settings." });
     }
   }, [enabled, provider, apiUrl, apiKey]);
 
@@ -236,19 +254,51 @@ export default function AiSettingsScreen() {
         {/* Save button */}
         {enabled && (
           <View style={{ paddingBottom: Math.max(insets.bottom, 16) }}>
-            <Button className="flex-row items-center justify-center gap-2" onPress={handleSave}>
+            <Button className="flex-row items-center justify-center gap-2" onPress={handleSave} disabled={isTesting}>
               <Icon
-                as={saved ? CheckCircleIcon : SaveIcon}
+                as={isTesting ? ServerIcon : SaveIcon}
                 className="size-4 text-primary-foreground"
                 size={16}
               />
               <Text className="font-semibold text-primary-foreground">
-                {saved ? "Saved!" : "Save"}
+                {isTesting ? "Testing Connection..." : "Save"}
               </Text>
             </Button>
           </View>
         )}
       </View>
+      
+      {/* ── Save Result Alert ───────────────────────────────── */}
+      <AlertDialog
+        open={saveStatus !== null}
+        onOpenChange={(open) => {
+          if (!open) setSaveStatus(null);
+        }}>
+        <AlertDialogContent>
+          <AlertDialogHeader className="items-center sm:items-center">
+            <AlertDialogTitle
+              className={saveStatus?.status === "success" ? "text-green-500" : "text-destructive"}>
+              {saveStatus?.status === "success" ? "Success" : "Error"}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+              {saveStatus?.message}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="sm:justify-center">
+            <AlertDialogAction
+              className={
+                saveStatus?.status === "success"
+                  ? "bg-green-500 hover:bg-green-600 active:bg-green-600/90"
+                  : ""
+              }
+              onPress={() => setSaveStatus(null)}>
+              <Text className={saveStatus?.status === "success" ? "text-white" : ""}>
+                Dismiss
+              </Text>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

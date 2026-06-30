@@ -354,8 +354,7 @@ export default function ProjectScreen() {
                 AI Not Configured
               </Text>
               <Text className="mb-8 px-8 text-center text-base text-muted-foreground">
-                Set up a cloud AI provider or download a local model to unlock AI features in your
-                projects.
+                Set up a cloud AI provider to unlock AI features in your projects.
               </Text>
               <Button
                 onPress={() => {
