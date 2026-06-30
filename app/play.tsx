@@ -3,7 +3,7 @@ import { View, Pressable, ActivityIndicator, useWindowDimensions } from "react-n
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Text } from "@/components/ui/text";
 import { Icon } from "@/components/ui/icon";
-import { ArrowLeftIcon, WrenchIcon, SettingsIcon, CodeIcon } from "lucide-react-native";
+import { ArrowLeftIcon, Gamepad2Icon, TerminalIcon } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
 import { Asset } from "expo-asset";
@@ -143,6 +143,7 @@ export default function PlayScreen() {
   const webViewRef = useRef<WebView>(null);
   const [serverUrl, setServerUrl] = useState<string | null>(null);
   const [levelError, setLevelError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"game" | "console">("game");
 
   const { width, height } = useWindowDimensions();
   // Ensure we get the landscape dimensions regardless of current physical orientation
@@ -338,50 +339,67 @@ export default function PlayScreen() {
               <Icon as={ArrowLeftIcon} className="size-6 text-foreground" size={24} />
             </Pressable>
 
-            <Pressable className="p-2 active:opacity-70">
-              <Icon as={WrenchIcon} className="size-6 text-muted-foreground" size={24} />
-            </Pressable>
-
-            <Pressable className="p-2 active:opacity-70">
-              <Icon as={CodeIcon} className="size-6 text-muted-foreground" size={24} />
-            </Pressable>
-
             <View className="flex-1" />
 
-            <Pressable className="p-2 active:opacity-70">
-              <Icon as={SettingsIcon} className="size-6 text-muted-foreground" size={24} />
+            <Pressable
+              onPress={() => setActiveTab("game")}
+              className={`rounded-xl p-3 active:opacity-70 ${activeTab === "game" ? "bg-primary/20" : ""}`}>
+              <Icon
+                as={Gamepad2Icon}
+                className={`size-6 ${activeTab === "game" ? "text-primary" : "text-muted-foreground"}`}
+                size={24}
+              />
+            </Pressable>
+
+            <Pressable
+              onPress={() => setActiveTab("console")}
+              className={`rounded-xl p-3 active:opacity-70 ${activeTab === "console" ? "bg-primary/20" : ""}`}>
+              <Icon
+                as={TerminalIcon}
+                className={`size-6 ${activeTab === "console" ? "text-primary" : "text-muted-foreground"}`}
+                size={24}
+              />
             </Pressable>
           </View>
 
           {/* Main Content Area */}
           <View className="flex-1 overflow-hidden bg-background">
-            {levelError ? (
-              <View className="flex-1 items-center justify-center bg-card p-8">
-                <Text className="mb-4 text-xl font-bold text-destructive">Level Error</Text>
-                <Text className="text-center text-foreground">{levelError}</Text>
-                <Pressable
-                  onPress={() => router.back()}
-                  className="mt-8 rounded-lg bg-secondary px-6 py-3 active:opacity-80">
-                  <Text className="font-medium text-foreground">Dismiss</Text>
-                </Pressable>
-              </View>
-            ) : serverUrl ? (
-              <WebView
-                ref={webViewRef}
-                source={{ uri: `${serverUrl}/pewpew.html` }}
-                className="flex-1 bg-transparent"
-                injectedJavaScriptBeforeContentLoaded={injectedFetchOverride}
-                onMessage={onMessage}
-                javaScriptEnabled={true}
-                domStorageEnabled={true}
-                allowFileAccess={true}
-                allowFileAccessFromFileURLs={true}
-                allowUniversalAccessFromFileURLs={true}
-              />
+            {activeTab === "game" ? (
+              levelError ? (
+                <View className="flex-1 items-center justify-center bg-card p-8">
+                  <Text className="mb-4 text-xl font-bold text-destructive">Level Error</Text>
+                  <Text className="text-center text-foreground">{levelError}</Text>
+                  <Pressable
+                    onPress={() => router.back()}
+                    className="mt-8 rounded-lg bg-secondary px-6 py-3 active:opacity-80">
+                    <Text className="font-medium text-foreground">Dismiss</Text>
+                  </Pressable>
+                </View>
+              ) : serverUrl ? (
+                <WebView
+                  ref={webViewRef}
+                  source={{ uri: `${serverUrl}/pewpew.html` }}
+                  className="flex-1 bg-transparent"
+                  injectedJavaScriptBeforeContentLoaded={injectedFetchOverride}
+                  onMessage={onMessage}
+                  javaScriptEnabled={true}
+                  domStorageEnabled={true}
+                  allowFileAccess={true}
+                  allowFileAccessFromFileURLs={true}
+                  allowUniversalAccessFromFileURLs={true}
+                />
+              ) : (
+                <View className="flex-1 items-center justify-center">
+                  <ActivityIndicator size="large" />
+                  <Text className="mt-4 text-muted-foreground">Starting local server...</Text>
+                </View>
+              )
             ) : (
-              <View className="flex-1 items-center justify-center">
-                <ActivityIndicator size="large" />
-                <Text className="mt-4 text-muted-foreground">Starting local server...</Text>
+              <View className="flex-1 items-center justify-center p-4">
+                <Text className="mb-2 text-xl font-bold text-foreground">Console</Text>
+                <Text className="text-center text-muted-foreground">
+                  Console view boilerplate. Implement logs here in the future.
+                </Text>
               </View>
             )}
           </View>
