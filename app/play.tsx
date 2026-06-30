@@ -364,8 +364,8 @@ export default function PlayScreen() {
 
           {/* Main Content Area */}
           <View className="flex-1 overflow-hidden bg-background">
-            {activeTab === "game" ? (
-              levelError ? (
+            <View style={{ flex: 1, display: activeTab === "game" ? "flex" : "none" }}>
+              {levelError ? (
                 <View className="flex-1 items-center justify-center bg-card p-8">
                   <Text className="mb-4 text-xl font-bold text-destructive">Level Error</Text>
                   <Text className="text-center text-foreground">{levelError}</Text>
@@ -393,15 +393,17 @@ export default function PlayScreen() {
                   <ActivityIndicator size="large" />
                   <Text className="mt-4 text-muted-foreground">Starting local server...</Text>
                 </View>
-              )
-            ) : (
-              <View className="flex-1 items-center justify-center p-4">
-                <Text className="mb-2 text-xl font-bold text-foreground">Console</Text>
-                <Text className="text-center text-muted-foreground">
-                  Console view boilerplate. Implement logs here in the future.
-                </Text>
-              </View>
-            )}
+              )}
+            </View>
+
+            <View
+              style={{ flex: 1, display: activeTab === "console" ? "flex" : "none" }}
+              className="items-center justify-center p-4">
+              <Text className="mb-2 text-xl font-bold text-foreground">Console</Text>
+              <Text className="text-center text-muted-foreground">
+                Console view boilerplate. Implement logs here in the future.
+              </Text>
+            </View>
           </View>
         </View>
       </View>
