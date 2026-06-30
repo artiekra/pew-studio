@@ -218,8 +218,8 @@ export async function moveNode(
   return getFileTree(projectId);
 }
 
-/** Export all project files as a ZIP archive */
-export async function exportProjectAsZip(projectId: string, projectName: string): Promise<void> {
+/** Export all project files as a ZIP archive. Returns true if export completed, false if cancelled. */
+export async function exportProjectAsZip(projectId: string, projectName: string): Promise<boolean> {
   const projectDir = getProjectDir(projectId);
   const zip = new JSZip();
 
@@ -247,16 +247,17 @@ export async function exportProjectAsZip(projectId: string, projectName: string)
 
   if (Platform.OS === "android") {
     const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
-    if (permissions.granted) {
-      const uri = await FileSystem.StorageAccessFramework.createFileAsync(
-        permissions.directoryUri,
-        `${projectName}.zip`,
-        "application/zip"
-      );
-      await FileSystem.writeAsStringAsync(uri, base64Data, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
+    if (!permissions.granted) {
+      return false;
     }
+    const uri = await FileSystem.StorageAccessFramework.createFileAsync(
+      permissions.directoryUri,
+      `${projectName}.zip`,
+      "application/zip"
+    );
+    await FileSystem.writeAsStringAsync(uri, base64Data, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
   } else if (Platform.OS === "web") {
     const blob = await zip.generateAsync({ type: "blob" });
     const url = URL.createObjectURL(blob);
@@ -283,6 +284,7 @@ export async function exportProjectAsZip(projectId: string, projectName: string)
       });
     }
   }
+  return true;
 }
 
 /** Import project files from a ZIP archive */

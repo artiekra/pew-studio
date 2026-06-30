@@ -15,6 +15,8 @@ import {
   PackageIcon,
   SparklesIcon,
   AlertCircleIcon,
+  CheckCircleIcon,
+  XCircleIcon,
 } from "lucide-react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -31,12 +33,25 @@ import { useTreeDragAndDrop } from "@/hooks/useTreeDragAndDrop";
 import { DragContext } from "@/components/project/DragContext";
 import { FileTreeNode } from "@/components/project/FileTreeNode";
 import { ProjectModals } from "@/components/project/ProjectModals";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function ProjectScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const [project, setProject] = useState<Project | null>(null);
   const [aiConfigured, setAiConfigured] = useState<boolean | null>(null);
+  const [exportStatus, setExportStatus] = useState<{
+    status: "success" | "error";
+    message: string;
+  } | null>(null);
   const insets = useSafeAreaInsets();
 
   // Re-check AI config every time this screen is focused
@@ -242,10 +257,18 @@ export default function ProjectScreen() {
               className="flex-1 flex-row items-center justify-center gap-2"
               onPress={async () => {
                 try {
-                  await exportProjectAsZip(id, project.name);
-                  Alert.alert("Export Successful", "Your level has been successfully exported.");
+                  const exported = await exportProjectAsZip(id, project.name);
+                  if (exported) {
+                    setExportStatus({
+                      status: "success",
+                      message: "Your level has been successfully exported.",
+                    });
+                  }
                 } catch (err) {
-                  Alert.alert("Export Failed", String(err));
+                  setExportStatus({
+                    status: "error",
+                    message: String(err),
+                  });
                 }
               }}>
               <Icon as={PackageIcon} className="size-4 text-foreground" size={16} />
@@ -286,6 +309,43 @@ export default function ProjectScreen() {
         onDelete={remove}
         fileTree={fileTree}
       />
+
+      {/* ── Export Result Alert ───────────────────────────────── */}
+      <AlertDialog
+        open={exportStatus !== null}
+        onOpenChange={(open) => {
+          if (!open) setExportStatus(null);
+        }}>
+        <AlertDialogContent>
+          <AlertDialogHeader className="items-center sm:items-center">
+            {/* {exportStatus?.status === "success" ? ( */}
+            {/*   <Icon as={CheckCircleIcon} className="mb-2 size-12 text-green-500" size={48} /> */}
+            {/* ) : ( */}
+            {/*   <Icon as={XCircleIcon} className="mb-2 size-12 text-destructive" size={48} /> */}
+            {/* )} */}
+            <AlertDialogTitle
+              className={exportStatus?.status === "success" ? "text-green-500" : ""}>
+              {exportStatus?.status === "success" ? "Export Successful" : "Export Failed"}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+              {exportStatus?.message}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="sm:justify-center">
+            <AlertDialogAction
+              className={
+                exportStatus?.status === "success"
+                  ? "bg-green-500 hover:bg-green-600 active:bg-green-600/90"
+                  : ""
+              }
+              onPress={() => setExportStatus(null)}>
+              <Text className={exportStatus?.status === "success" ? "text-white" : ""}>
+                Dismiss
+              </Text>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
