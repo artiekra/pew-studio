@@ -15,12 +15,6 @@ import { Text } from "@/components/ui/text";
 import { Icon } from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   ArrowLeftIcon,
   SendIcon,
   ChevronDownIcon,
@@ -92,6 +86,8 @@ export default function AiScreen() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [isModelsLoading, setIsModelsLoading] = useState(false);
+  const [isModelSelectorVisible, setIsModelSelectorVisible] = useState(false);
+  const [modelSearchQuery, setModelSearchQuery] = useState("");
 
   const loadChats = useCallback(async () => {
     if (projectId) {
@@ -558,34 +554,22 @@ export default function AiScreen() {
                   editable={!isLoading}
                 />
                 <View className="mt-2 flex-row items-center justify-between px-1">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Pressable className="flex-row items-center gap-1 rounded-lg px-2 py-1 active:opacity-70">
-                        {isModelsLoading ? (
-                          <ActivityIndicator size="small" color="#888" style={{ width: 12, height: 12, marginRight: 4 }} />
-                        ) : null}
-                        <Text className="text-xs font-medium text-muted-foreground" numberOfLines={1} style={{ maxWidth: 150 }}>
-                          {providerModel}
-                        </Text>
-                        <Icon
-                          as={ChevronDownIcon}
-                          className="size-3 text-muted-foreground"
-                          size={12}
-                        />
-                      </Pressable>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-64 p-1">
-                      <ScrollView style={{ maxHeight: 250 }} showsVerticalScrollIndicator={true}>
-                        {(availableModels.length > 0 ? availableModels : [providerModel]).map((model) => (
-                          <DropdownMenuItem
-                            key={model}
-                            onPress={() => setProviderModel(model)}>
-                            <Text className="text-sm text-foreground">{model}</Text>
-                          </DropdownMenuItem>
-                        ))}
-                      </ScrollView>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <Pressable 
+                    className="flex-row items-center gap-1 rounded-lg px-2 py-1 active:opacity-70"
+                    onPress={() => setIsModelSelectorVisible(true)}
+                  >
+                    {isModelsLoading ? (
+                      <ActivityIndicator size="small" color="#888" style={{ width: 12, height: 12, marginRight: 4 }} />
+                    ) : null}
+                    <Text className="text-xs font-medium text-muted-foreground" numberOfLines={1} style={{ maxWidth: 150 }}>
+                      {providerModel}
+                    </Text>
+                    <Icon
+                      as={ChevronDownIcon}
+                      className="size-3 text-muted-foreground"
+                      size={12}
+                    />
+                  </Pressable>
 
                   <Pressable
                     className={`rounded-full p-2 ${
@@ -690,6 +674,80 @@ export default function AiScreen() {
                 />
                 <Text className="text-center text-lg font-medium text-foreground">
                   No chats found
+                </Text>
+              </View>
+            )}
+          />
+        </View>
+      </Modal>
+
+      {/* ── Model Selector Modal ───────────────────────────────── */}
+      <Modal
+        visible={isModelSelectorVisible}
+        animationType="slide"
+        onRequestClose={() => setIsModelSelectorVisible(false)}>
+        <View
+          className="flex-1 bg-background"
+          style={{
+            paddingTop: insets.top,
+            paddingBottom: Math.max(insets.bottom, 16),
+          }}>
+          <View className="flex-row items-center justify-between border-b border-border px-4 py-3">
+            <Text className="text-xl font-bold text-foreground">Select AI Model</Text>
+            <Pressable
+              onPress={() => setIsModelSelectorVisible(false)}
+              className="-mr-2 p-2">
+              <Icon as={XIcon} className="size-6 text-foreground" size={24} />
+            </Pressable>
+          </View>
+
+          <View className="border-b border-border p-4">
+            <View className="flex-row items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
+              <Icon
+                as={SearchIcon}
+                className="size-4 text-muted-foreground"
+                size={16}
+              />
+              <TextInput
+                className="flex-1 text-base text-foreground"
+                placeholder="Search models..."
+                placeholderTextColor="#888"
+                value={modelSearchQuery}
+                onChangeText={setModelSearchQuery}
+              />
+              {modelSearchQuery.length > 0 && (
+                <Pressable onPress={() => setModelSearchQuery("")}>
+                  <Icon
+                    as={XIcon}
+                    className="size-4 text-muted-foreground"
+                    size={16}
+                  />
+                </Pressable>
+              )}
+            </View>
+          </View>
+
+          <FlatList
+            data={availableModels.length > 0 ? availableModels.filter(m => m.toLowerCase().includes(modelSearchQuery.toLowerCase())) : [providerModel]}
+            keyExtractor={(item) => item}
+            renderItem={({ item }) => (
+              <Pressable
+                className="flex-row items-center justify-between border-b border-border p-4 active:bg-muted"
+                onPress={() => {
+                  setProviderModel(item);
+                  setIsModelSelectorVisible(false);
+                }}>
+                <Text className="text-base text-foreground">{item}</Text>
+                {providerModel === item && (
+                  <Icon as={CheckIcon} className="size-5 text-primary" size={20} />
+                )}
+              </Pressable>
+            )}
+            contentContainerStyle={{ paddingBottom: 24 }}
+            ListEmptyComponent={() => (
+              <View className="mt-10 flex-1 items-center justify-center p-8">
+                <Text className="text-center text-lg font-medium text-foreground">
+                  No models found
                 </Text>
               </View>
             )}

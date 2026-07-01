@@ -139,11 +139,39 @@ export async function fetchAvailableModels(): Promise<string[]> {
     if (!res.ok) return [];
     
     const data = await res.json();
+    
+    // Blacklist of model name substrings that are typically for images, audio, embeddings, or legacy text
+    const blacklist = [
+      "dall-e", "dalle", "tts", "whisper", "embedding", "embed",
+      "babbage", "davinci", "ada", "curie",
+      "stable-diffusion", "flux", "midjourney",
+      "audio", "moderation", "realtime",
+      "text-search", "text-similarity", "text-moderation"
+    ];
+
+    const isChatModel = (id: string) => {
+      if (!id) return false;
+      const lower = id.toLowerCase();
+      return !blacklist.some((bad) => lower.includes(bad));
+    };
+
     if (data && data.data && Array.isArray(data.data)) {
-      return data.data.map((m: any) => m.id).filter(Boolean);
+      return data.data
+        .map((m: any) => (m.id ? m.id.replace("models/", "") : ""))
+        .filter(isChatModel);
     }
+
     if (data && data.models && Array.isArray(data.models)) {
-      return data.models.map((m: any) => m.name.replace("models/", "")).filter(Boolean);
+      return data.models
+        .filter((m: any) => {
+          // For Gemini native models, ensure it supports chat generation
+          if (m.supportedGenerationMethods) {
+            return m.supportedGenerationMethods.includes("generateContent");
+          }
+          return true;
+        })
+        .map((m: any) => m.name.replace("models/", ""))
+        .filter(isChatModel);
     }
     return [];
   } catch (e) {
