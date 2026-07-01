@@ -29,7 +29,7 @@ import { exportProjectAsZip } from "@/services/zipService";
 import type { Project, FileNode } from "@/types";
 
 import { useProjectFileSystem } from "@/hooks/useProjectFileSystem";
-import { useProjectModals } from "@/hooks/useProjectModals";
+import { useExplorerState, ExplorerContext } from "@/hooks/useExplorerState";
 import { useTreeDragAndDrop } from "@/hooks/useTreeDragAndDrop";
 
 import { DragContext } from "@/components/project/DragContext";
@@ -76,9 +76,8 @@ export default function ProjectScreen() {
     remove,
   } = useProjectFileSystem(id);
 
-  // Modals state & operations
-  const { activeModal, closeModals, openNewFolder, openNewFile, openRename, openMove, openDelete } =
-    useProjectModals();
+  // Explorer state (modals)
+  const { state, dispatch } = useExplorerState();
 
   // Drag and drop state & operations
   const {
@@ -163,19 +162,20 @@ export default function ProjectScreen() {
         }}
       />
 
+      <ExplorerContext.Provider value={{ state, dispatch, createFolder, createFile, rename, move, remove, fileTree }}>
       <View className="flex-1 bg-background" {...panResponder.panHandlers}>
         {/* ── File tree ─────────────────────────────────────────── */}
         <View className="flex-1 p-4" ref={treeContainerRef} onLayout={onTreeLayout}>
           <View className="mb-2 flex-row gap-2">
             <Pressable
               className="flex-row items-center gap-2 rounded-lg px-3 py-2 active:opacity-70"
-              onPress={() => openNewFile(null)}>
+              onPress={() => dispatch({ type: "START_CREATE", itemType: "file", parentPath: null })}>
               <Icon as={FilePlusIcon} className="size-4 text-muted-foreground" size={16} />
               <Text className="text-sm text-muted-foreground">New file</Text>
             </Pressable>
             <Pressable
               className="flex-row items-center gap-2 rounded-lg px-3 py-2 active:opacity-70"
-              onPress={() => openNewFolder(null)}>
+              onPress={() => dispatch({ type: "START_CREATE", itemType: "folder", parentPath: null })}>
               <Icon as={FolderPlusIcon} className="size-4 text-muted-foreground" size={16} />
               <Text className="text-sm text-muted-foreground">New folder</Text>
             </Pressable>
@@ -195,11 +195,6 @@ export default function ProjectScreen() {
                 depth={0}
                 expandedFolders={expandedFolders}
                 onToggle={toggleFolder}
-                onNewFolder={openNewFolder}
-                onNewFile={openNewFile}
-                onDelete={openDelete}
-                onRename={openRename}
-                onMove={openMove}
                 onOpenFile={handleOpenFile}
               />
             ))}
@@ -285,16 +280,7 @@ export default function ProjectScreen() {
         </Animated.View>
       </View>
 
-      <ProjectModals
-        activeModal={activeModal}
-        closeModals={closeModals}
-        onCreateFolder={createFolder}
-        onCreateFile={createFile}
-        onRename={rename}
-        onMove={move}
-        onDelete={remove}
-        fileTree={fileTree}
-      />
+      <ProjectModals />
 
       {/* ── Export Result Alert ───────────────────────────────── */}
       <AlertDialog
@@ -377,6 +363,7 @@ export default function ProjectScreen() {
           )}
         </View>
       </Modal>
+      </ExplorerContext.Provider>
     </>
   );
 }

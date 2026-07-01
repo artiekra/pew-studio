@@ -25,28 +25,19 @@ import {
 import { LuaIcon } from "@/components/ui/icons/LuaIcon";
 import type { FileNode } from "@/types";
 import { DragContext } from "./DragContext";
+import { useExplorerContext } from "@/hooks/useExplorerState";
 
 export function FileTreeNode({
   node,
   depth,
   expandedFolders,
   onToggle,
-  onNewFolder,
-  onNewFile,
-  onDelete,
-  onRename,
-  onMove,
   onOpenFile,
 }: {
   node: FileNode;
   depth: number;
   expandedFolders: Set<string>;
   onToggle: (id: string) => void;
-  onNewFolder: (parentId: string | null) => void;
-  onNewFile: (parentId: string | null) => void;
-  onDelete: (node: FileNode) => void;
-  onRename: (node: FileNode) => void;
-  onMove: (node: FileNode) => void;
   onOpenFile: (node: FileNode) => void;
 }) {
   const isFolder = node.type === "folder";
@@ -54,6 +45,7 @@ export function FileTreeNode({
   const indent = depth * 20;
 
   const { draggedNodeId, dropTargetId, registerLayout, startDrag } = React.useContext(DragContext);
+  const { dispatch } = useExplorerContext();
 
   const isBeingDragged = draggedNodeId === node.id;
   const isDropTarget = draggedNodeId !== null && dropTargetId === node.id && node.type === "folder";
@@ -164,27 +156,27 @@ export function FileTreeNode({
             <DropdownMenuContent align="end" className="w-48">
               {isFolder && (
                 <>
-                  <DropdownMenuItem onPress={() => onNewFile(node.id)}>
+                  <DropdownMenuItem onPress={() => dispatch({ type: "START_CREATE", itemType: "file", parentPath: node.id })}>
                     <Icon as={FilePlusIcon} className="size-4 text-muted-foreground" size={16} />
                     <Text>New file</Text>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onPress={() => onNewFolder(node.id)}>
+                  <DropdownMenuItem onPress={() => dispatch({ type: "START_CREATE", itemType: "folder", parentPath: node.id })}>
                     <Icon as={FolderPlusIcon} className="size-4 text-muted-foreground" size={16} />
                     <Text>New folder</Text>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                 </>
               )}
-              <DropdownMenuItem onPress={() => onRename(node)}>
+              <DropdownMenuItem onPress={() => dispatch({ type: "START_RENAME", node })}>
                 <Icon as={PencilIcon} className="size-4 text-muted-foreground" size={16} />
                 <Text>Rename</Text>
               </DropdownMenuItem>
-              <DropdownMenuItem onPress={() => onMove(node)}>
+              <DropdownMenuItem onPress={() => dispatch({ type: "START_MOVE", node })}>
                 <Icon as={MoveIcon} className="size-4 text-muted-foreground" size={16} />
                 <Text>Move to…</Text>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem variant="destructive" onPress={() => onDelete(node)}>
+              <DropdownMenuItem variant="destructive" onPress={() => dispatch({ type: "START_DELETE", node })}>
                 <Icon as={Trash2Icon} className="size-4 text-destructive" size={16} />
                 <Text>Delete</Text>
               </DropdownMenuItem>
@@ -202,11 +194,6 @@ export function FileTreeNode({
             depth={depth + 1}
             expandedFolders={expandedFolders}
             onToggle={onToggle}
-            onNewFolder={onNewFolder}
-            onNewFile={onNewFile}
-            onDelete={onDelete}
-            onRename={onRename}
-            onMove={onMove}
             onOpenFile={onOpenFile}
           />
         ))}
