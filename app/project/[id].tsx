@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { View, Pressable, Alert, Modal } from "react-native";
+import { View, Pressable, Alert, Modal, TextInput } from "react-native";
 import { Stack, useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { Text } from "@/components/ui/text";
 import { Icon } from "@/components/ui/icon";
@@ -18,6 +18,8 @@ import {
   CheckCircleIcon,
   XCircleIcon,
   XIcon,
+  SendIcon,
+  ChevronDownIcon,
 } from "lucide-react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -353,12 +355,34 @@ export default function ProjectScreen() {
               </Button>
             </View>
           ) : (
-            <View className="-mt-20 flex-1 items-center justify-center">
-              <Icon as={SparklesIcon} className="mb-6 size-16 text-primary" size={64} />
-              <Text className="mb-2 text-center text-xl font-bold text-foreground">Chat</Text>
-              <Text className="px-8 text-center text-base text-muted-foreground">
-                AI is configured. Chat interface coming soon.
-              </Text>
+            <View className="flex-1">
+              {/* ── Chat Messages Area (Empty state) ──────────────── */}
+              <View className="flex-1 items-center justify-center px-8">
+                <Text className="text-center text-sm text-muted-foreground">
+                  this is ai chat and you can reference files with @ sign
+                </Text>
+              </View>
+
+              {/* ── Chat Input Area ─────────────────────────────────── */}
+              <View className="border-t border-border p-4">
+                <View className="rounded-xl border border-border bg-card p-2">
+                  <TextInput
+                    className="max-h-32 min-h-[40px] px-2 text-foreground"
+                    placeholder="Ask AI something..."
+                    placeholderTextColor="#888"
+                    multiline
+                  />
+                  <View className="mt-2 flex-row items-center justify-between px-1">
+                    <Pressable className="flex-row items-center gap-1 rounded-lg px-2 py-1 active:opacity-70">
+                      <Text className="text-xs font-medium text-muted-foreground">Claude 3.5 Sonnet</Text>
+                      <Icon as={ChevronDownIcon} className="size-3 text-muted-foreground" size={12} />
+                    </Pressable>
+                    <Pressable className="rounded-full bg-primary p-2 active:opacity-70">
+                      <Icon as={SendIcon} className="size-4 text-primary-foreground" size={16} />
+                    </Pressable>
+                  </View>
+                </View>
+              </View>
             </View>
           )}
         </View>
