@@ -1,16 +1,7 @@
 import * as FileSystem from "expo-file-system/legacy";
 import { deleteProjectFiles, initProjectFiles, importProjectFiles } from "./fileSystem";
 
-// ── Types ────────────────────────────────────────────────────────────
-
-export type Project = {
-  id: string;
-  name: string;
-  color?: string;
-  createdAt: string; // ISO 8601
-  updatedAt: string; // ISO 8601
-};
-
+import type { Project } from "@/types";
 // ── Storage keys ─────────────────────────────────────────────────────
 
 const PROJECTS_FILE = `${FileSystem.documentDirectory}pewpew_projects.json`;
@@ -18,7 +9,7 @@ const PROJECTS_FILE = `${FileSystem.documentDirectory}pewpew_projects.json`;
 // ── Helpers ──────────────────────────────────────────────────────────
 
 function generateId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  return crypto.randomUUID();
 }
 
 // ── CRUD ─────────────────────────────────────────────────────────────

@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import type { FileNode } from "@/lib/fileSystem";
+import type { FileNode } from "@/types";
 
 export type ModalState =
   | { type: "new-folder"; parentId: string | null }

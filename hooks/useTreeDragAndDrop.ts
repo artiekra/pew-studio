@@ -1,7 +1,7 @@
 import * as React from "react";
 import { PanResponder, View } from "react-native";
 import { useSharedValue, withSpring, withTiming } from "react-native-reanimated";
-import type { FileNode, ProjectFileTree } from "@/lib/fileSystem";
+import type { FileNode, ProjectFileTree } from "@/types";
 
 export type FlatNode = {
   node: FileNode;

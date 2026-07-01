@@ -23,7 +23,7 @@ import {
   Trash2Icon,
 } from "lucide-react-native";
 import { LuaIcon } from "@/components/ui/icons/LuaIcon";
-import type { FileNode } from "@/lib/fileSystem";
+import type { FileNode } from "@/types";
 import { DragContext } from "./DragContext";
 
 export function FileTreeNode({

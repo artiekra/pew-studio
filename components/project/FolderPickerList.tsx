@@ -3,7 +3,7 @@ import { Pressable } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Icon } from "@/components/ui/icon";
 import { FolderIcon } from "lucide-react-native";
-import type { FileNode } from "@/lib/fileSystem";
+import type { FileNode } from "@/types";
 
 export function FolderPickerList({
   nodes,

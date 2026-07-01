@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { ModalState } from "@/hooks/useProjectModals";
 import { FolderPickerList } from "./FolderPickerList";
-import type { ProjectFileTree } from "@/lib/fileSystem";
+import type { ProjectFileTree } from "@/types";
 
 export function ProjectModals({
   activeModal,

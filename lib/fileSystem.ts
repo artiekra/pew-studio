@@ -4,18 +4,7 @@ import JSZip from "jszip";
 import * as Sharing from "expo-sharing";
 import { Platform } from "react-native";
 
-// ── Types ────────────────────────────────────────────────────────────
-
-export type FileNode = {
-  id: string; // The relative path from the project root, e.g., "level.lua", "folder/file.txt", "folder"
-  name: string;
-  type: "file" | "folder";
-  content?: string; // Optional text content (not loaded by default)
-  children?: FileNode[];
-};
-
-export type ProjectFileTree = FileNode[];
-
+import type { FileNode, ProjectFileTree } from "@/types";
 // ── Storage helpers ──────────────────────────────────────────────────
 
 const PROJECTS_DIR = `${FileSystem.documentDirectory}projects/`;

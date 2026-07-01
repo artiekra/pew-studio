@@ -6,8 +6,8 @@ import {
   moveNode,
   removeNode,
   renameNode,
-  type ProjectFileTree,
 } from "@/lib/fileSystem";
+import type { ProjectFileTree } from "@/types";
 
 export function useProjectFileSystem(projectId: string | undefined) {
   const [fileTree, setFileTree] = useState<ProjectFileTree>([]);

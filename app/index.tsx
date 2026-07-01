@@ -24,8 +24,8 @@ import {
   renameProject,
   updateProjectColor,
   importProject,
-  type Project,
 } from "@/lib/projects";
+import type { Project } from "@/types";
 import { Stack, useRouter } from "expo-router";
 import * as DocumentPicker from "expo-document-picker";
 import {
