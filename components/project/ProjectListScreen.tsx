@@ -21,6 +21,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
+  CopyIcon,
   DownloadIcon,
   FilePlusIcon,
   FolderIcon,
@@ -117,6 +118,7 @@ export function ProjectListScreen() {
     handleRename,
     confirmRename,
     handleColorChange,
+    handleDuplicate,
   } = useProjects();
 
   if (!loaded) return null;
@@ -143,6 +145,7 @@ export function ProjectListScreen() {
                 onDelete={handleDelete}
                 onRename={handleRename}
                 onColorChange={handleColorChange}
+                onDuplicate={handleDuplicate}
               />
             )}
           />
@@ -334,11 +337,13 @@ function ProjectCard({
   onDelete,
   onRename,
   onColorChange,
+  onDuplicate,
 }: {
   project: Project;
   onDelete: (project: Project) => void;
   onRename: (project: Project) => void;
   onColorChange: (project: Project, color?: string) => void;
+  onDuplicate: (project: Project) => void;
 }) {
   const router = useRouter();
   const colorDef = PROJECT_COLORS.find((c) => c.value === project.color) || PROJECT_COLORS[0];
@@ -378,6 +383,10 @@ function ProjectCard({
           <DropdownMenuItem onPress={() => router.push(`/project/${project.id}`)}>
             <Icon as={FolderOpenIcon} className="mr-2 size-4" />
             <Text>Open Project</Text>
+          </DropdownMenuItem>
+          <DropdownMenuItem onPress={() => onDuplicate(project)}>
+            <Icon as={CopyIcon} className="mr-2 size-4" />
+            <Text>Duplicate</Text>
           </DropdownMenuItem>
           <DropdownMenuItem onPress={() => onRename(project)}>
             <Icon as={PencilIcon} className="mr-2 size-4" />

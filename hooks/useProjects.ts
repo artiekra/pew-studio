@@ -7,6 +7,7 @@ import {
   renameProject,
   updateProjectColor,
   importProject,
+  duplicateProject,
 } from "@/services/projectRepository";
 import type { Project } from "@/types";
 
@@ -101,6 +102,17 @@ export function useProjects() {
     }
   }, []);
 
+  const handleDuplicate = useCallback(async (project: Project) => {
+    try {
+      const newProject = await duplicateProject(project.id);
+      if (newProject) {
+        setProjects((prev) => [newProject, ...prev]);
+      }
+    } catch (e) {
+      console.error("Duplicate failed:", e);
+    }
+  }, []);
+
   return {
     projects,
     loaded,
@@ -123,5 +135,6 @@ export function useProjects() {
     handleRename,
     confirmRename,
     handleColorChange,
+    handleDuplicate,
   };
 }

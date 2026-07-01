@@ -96,3 +96,38 @@ export async function updateProjectColor(id: string, color?: string): Promise<vo
     await saveProjects(projects);
   }
 }
+
+export async function duplicateProject(id: string): Promise<Project | null> {
+  const projects = await getProjects();
+  const projectToCopy = projects.find((p) => p.id === id);
+  if (!projectToCopy) return null;
+
+  const now = new Date().toISOString();
+  const newProject: Project = {
+    id: generateId(),
+    name: `${projectToCopy.name} Copy`,
+    color: projectToCopy.color,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  projects.unshift(newProject);
+  await saveProjects(projects);
+
+  const sourceDir = getProjectDir(id);
+  const targetDir = getProjectDir(newProject.id);
+
+  const info = await FileSystem.getInfoAsync(sourceDir);
+  if (info.exists) {
+    await FileSystem.copyAsync({
+      from: sourceDir,
+      to: targetDir,
+    });
+  } else {
+    // If source doesn't exist for some reason, just create an empty folder
+    await FileSystem.makeDirectoryAsync(targetDir, { intermediates: true });
+    await ensureAssetsAreCopied(newProject.id);
+  }
+
+  return newProject;
+}
