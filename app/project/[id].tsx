@@ -17,9 +17,6 @@ import {
   AlertCircleIcon,
   CheckCircleIcon,
   XCircleIcon,
-  XIcon,
-  SendIcon,
-  ChevronDownIcon,
 } from "lucide-react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -51,20 +48,12 @@ export default function ProjectScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const [project, setProject] = useState<Project | null>(null);
-  const [aiConfigured, setAiConfigured] = useState<boolean | null>(null);
-  const [aiModalVisible, setAiModalVisible] = useState(false);
   const [exportStatus, setExportStatus] = useState<{
     status: "success" | "error";
     message: string;
   } | null>(null);
   const insets = useSafeAreaInsets();
 
-  // Re-check AI config every time this screen is focused
-  useFocusEffect(
-    useCallback(() => {
-      isAiConfigured().then(setAiConfigured);
-    }, [])
-  );
 
   // File system state & operations
   const {
@@ -152,7 +141,7 @@ export default function ProjectScreen() {
           headerRight: () => (
             <Pressable
               onPress={() => {
-                setAiModalVisible(true);
+                router.push({ pathname: "/ai/[projectId]", params: { projectId: id } });
               }}
               className="ios:mr-0 mr-2 p-1"
               hitSlop={8}>
@@ -320,73 +309,6 @@ export default function ProjectScreen() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* ── AI Chat Modal ───────────────────────────────── */}
-      <Modal
-        visible={aiModalVisible}
-        animationType="slide"
-        onRequestClose={() => setAiModalVisible(false)}>
-        <View
-          className="flex-1 bg-background"
-          style={{ paddingTop: insets.top, paddingBottom: Math.max(insets.bottom, 16) }}>
-          <View className="flex-row items-center justify-between px-4 py-3">
-            <Text className="text-xl font-bold text-foreground">AI Assistant</Text>
-            <Pressable onPress={() => setAiModalVisible(false)} className="-mr-2 p-2">
-              <Icon as={XIcon} className="size-6 text-foreground" size={24} />
-            </Pressable>
-          </View>
-
-          {!aiConfigured ? (
-            <View className="-mt-20 flex-1 items-center justify-center">
-              <Icon as={SparklesIcon} className="mb-6 size-16 text-muted-foreground" size={64} />
-              <Text className="mb-2 text-center text-xl font-bold text-foreground">
-                AI Not Configured
-              </Text>
-              <Text className="mb-8 px-8 text-center text-base text-muted-foreground">
-                Set up a cloud AI provider to unlock AI features in your projects.
-              </Text>
-              <Button
-                onPress={() => {
-                  setAiModalVisible(false);
-                  router.push("/ai-settings");
-                }}
-                className="w-full max-w-[250px] flex-row justify-center">
-                <Text className="font-semibold text-primary-foreground">Go to Settings</Text>
-              </Button>
-            </View>
-          ) : (
-            <View className="flex-1">
-              {/* ── Chat Messages Area (Empty state) ──────────────── */}
-              <View className="flex-1 items-center justify-center px-8">
-                <Text className="text-center text-sm text-muted-foreground">
-                  this is ai chat and you can reference files with @ sign
-                </Text>
-              </View>
-
-              {/* ── Chat Input Area ─────────────────────────────────── */}
-              <View className="border-t border-border p-4">
-                <View className="rounded-xl border border-border bg-card p-2">
-                  <TextInput
-                    className="max-h-32 min-h-[40px] px-2 text-foreground"
-                    placeholder="Ask AI something..."
-                    placeholderTextColor="#888"
-                    multiline
-                  />
-                  <View className="mt-2 flex-row items-center justify-between px-1">
-                    <Pressable className="flex-row items-center gap-1 rounded-lg px-2 py-1 active:opacity-70">
-                      <Text className="text-xs font-medium text-muted-foreground">Claude 3.5 Sonnet</Text>
-                      <Icon as={ChevronDownIcon} className="size-3 text-muted-foreground" size={12} />
-                    </Pressable>
-                    <Pressable className="rounded-full bg-primary p-2 active:opacity-70">
-                      <Icon as={SendIcon} className="size-4 text-primary-foreground" size={16} />
-                    </Pressable>
-                  </View>
-                </View>
-              </View>
-            </View>
-          )}
-        </View>
-      </Modal>
       </ExplorerContext.Provider>
     </>
   );

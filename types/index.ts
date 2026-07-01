@@ -15,3 +15,35 @@ export type Project = {
   createdAt: string; // ISO 8601
   updatedAt: string; // ISO 8601
 };
+
+export type ChatToolCall = {
+  name: string;
+  args: Record<string, any>;
+  result: string;
+};
+
+export type ChatUndoGroup = {
+  entries: {
+    path: string;
+    previousContent: string | null;
+  }[];
+  undone?: boolean; // true if user has already undone this group
+};
+
+export type ChatMessage = {
+  id: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  toolCalls?: ChatToolCall[];
+  undoGroup?: ChatUndoGroup;
+  createdAt: string; // ISO 8601
+};
+
+export type Chat = {
+  id: string;
+  projectId: string;
+  title: string;
+  messages: ChatMessage[];
+  createdAt: string; // ISO 8601
+  updatedAt: string; // ISO 8601
+};
