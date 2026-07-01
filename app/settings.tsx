@@ -1,7 +1,7 @@
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { Stack, useRouter } from "expo-router";
-import { MoonStarIcon, SunIcon, SparklesIcon, ChevronRightIcon } from "lucide-react-native";
+import { MoonStarIcon, SunIcon, SparklesIcon, ChevronRightIcon, PaletteIcon, InfoIcon } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
 import * as React from "react";
 import { View, Pressable } from "react-native";
@@ -40,11 +40,31 @@ export default function SettingsScreen() {
           <ThemeToggle />
 
           <Pressable
+            onPress={() => router.push("/editor-theme")}
+            className="flex-row items-center justify-between rounded-xl border border-border bg-card p-4 active:opacity-70">
+            <View className="flex-row items-center gap-3">
+              <Icon as={PaletteIcon} className="size-5 text-foreground" size={20} />
+              <Text className="text-base font-medium text-foreground">Code Editor Theme</Text>
+            </View>
+            <Icon as={ChevronRightIcon} className="size-5 text-muted-foreground" size={20} />
+          </Pressable>
+
+          <Pressable
             onPress={() => router.push("/ai-settings")}
             className="flex-row items-center justify-between rounded-xl border border-border bg-card p-4 active:opacity-70">
             <View className="flex-row items-center gap-3">
               <Icon as={SparklesIcon} className="size-5 text-foreground" size={20} />
               <Text className="text-base font-medium text-foreground">AI Settings</Text>
+            </View>
+            <Icon as={ChevronRightIcon} className="size-5 text-muted-foreground" size={20} />
+          </Pressable>
+
+          <Pressable
+            onPress={() => router.push("/about")}
+            className="flex-row items-center justify-between rounded-xl border border-border bg-card p-4 active:opacity-70">
+            <View className="flex-row items-center gap-3">
+              <Icon as={InfoIcon} className="size-5 text-foreground" size={20} />
+              <Text className="text-base font-medium text-foreground">About</Text>
             </View>
             <Icon as={ChevronRightIcon} className="size-5 text-muted-foreground" size={20} />
           </Pressable>
