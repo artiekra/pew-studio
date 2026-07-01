@@ -11,6 +11,7 @@ import * as FileSystem from "expo-file-system/legacy";
 import Server from "@dr.pogodin/react-native-static-server";
 import { getFileTree } from "@/services/fileIO";
 import JSZip from "jszip";
+import type { GameToNative } from "@/lib/messages/gameMessages";
 
 const injectedFetchOverride = `
   (function() {
@@ -231,7 +232,7 @@ export default function PlayScreen() {
 
   const onMessage = async (event: any) => {
     try {
-      const data = JSON.parse(event.nativeEvent.data);
+      const data = JSON.parse(event.nativeEvent.data) as GameToNative;
       if (data.type === "error") {
         setLevelError(data.message);
       } else if (data.type === "console_log") {

@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { readFileContent, writeFileContent } from "@/services/fileIO";
 import { Asset } from "expo-asset";
 import { File } from "expo-file-system";
+import type { EditorToNative } from "@/lib/messages/editorMessages";
 
 export default function EditorScreen() {
   const { projectId, fileId } = useLocalSearchParams<{ projectId: string; fileId: string }>();
@@ -45,7 +46,7 @@ export default function EditorScreen() {
 
   const handleMessage = async (event: any) => {
     try {
-      const data = JSON.parse(event.nativeEvent.data);
+      const data = JSON.parse(event.nativeEvent.data) as EditorToNative;
       if (data.type === "change" && projectId && fileId) {
         await writeFileContent(projectId, fileId, data.content);
       }
