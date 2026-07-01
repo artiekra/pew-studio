@@ -9,7 +9,7 @@ import { WebView } from "react-native-webview";
 import { Asset } from "expo-asset";
 import * as FileSystem from "expo-file-system/legacy";
 import Server from "@dr.pogodin/react-native-static-server";
-import { getFileTree } from "@/lib/fileSystem";
+import { getFileTree } from "@/services/fileIO";
 import JSZip from "jszip";
 
 const injectedFetchOverride = `

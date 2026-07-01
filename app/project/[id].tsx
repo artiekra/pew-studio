@@ -24,8 +24,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { isAiConfigured } from "@/lib/aiSettings";
 
-import { getProjects } from "@/lib/projects";
-import { exportProjectAsZip } from "@/lib/fileSystem";
+import { getProjects } from "@/services/projectRepository";
+import { exportProjectAsZip } from "@/services/zipService";
 import type { Project, FileNode } from "@/types";
 
 import { useProjectFileSystem } from "@/hooks/useProjectFileSystem";

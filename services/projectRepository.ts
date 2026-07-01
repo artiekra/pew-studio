@@ -1,18 +1,16 @@
 import * as FileSystem from "expo-file-system/legacy";
-import { deleteProjectFiles, initProjectFiles, importProjectFiles } from "./fileSystem";
-
+import { ensureAssetsAreCopied } from "./assetService";
+import { importProjectFromZip } from "./zipService";
+import { getProjectDir } from "./fileIO";
 import type { Project } from "@/types";
-// ── Storage keys ─────────────────────────────────────────────────────
+
+import * as Crypto from "expo-crypto";
 
 const PROJECTS_FILE = `${FileSystem.documentDirectory}pewpew_projects.json`;
 
-// ── Helpers ──────────────────────────────────────────────────────────
-
 function generateId(): string {
-  return crypto.randomUUID();
+  return Crypto.randomUUID();
 }
-
-// ── CRUD ─────────────────────────────────────────────────────────────
 
 export async function getProjects(): Promise<Project[]> {
   try {
@@ -41,7 +39,11 @@ export async function createProject(name: string): Promise<Project> {
   };
   projects.unshift(project); // newest first
   await saveProjects(projects);
-  await initProjectFiles(project.id);
+  
+  const projectDir = getProjectDir(project.id);
+  await FileSystem.makeDirectoryAsync(projectDir, { intermediates: true });
+  await ensureAssetsAreCopied(project.id);
+  
   return project;
 }
 
@@ -56,14 +58,23 @@ export async function importProject(name: string, zipUri: string): Promise<Proje
   };
   projects.unshift(project); // newest first
   await saveProjects(projects);
-  await importProjectFiles(project.id, zipUri);
+  
+  const projectDir = getProjectDir(project.id);
+  await FileSystem.makeDirectoryAsync(projectDir, { intermediates: true });
+  await importProjectFromZip(project.id, zipUri);
+  
   return project;
 }
 
 export async function deleteProject(id: string): Promise<void> {
   const projects = await getProjects();
   await saveProjects(projects.filter((p) => p.id !== id));
-  await deleteProjectFiles(id);
+  
+  const projectDir = getProjectDir(id);
+  const info = await FileSystem.getInfoAsync(projectDir);
+  if (info.exists) {
+    await FileSystem.deleteAsync(projectDir, { idempotent: true });
+  }
 }
 
 export async function renameProject(id: string, newName: string): Promise<void> {

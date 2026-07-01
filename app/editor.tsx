@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeftIcon, PlayIcon } from "lucide-react-native";
 import { WebView } from "react-native-webview";
 import { useEffect, useRef, useState } from "react";
-import { readFileContent, writeFileContent } from "@/lib/fileSystem";
+import { readFileContent, writeFileContent } from "@/services/fileIO";
 import { Asset } from "expo-asset";
 import { File } from "expo-file-system";
 

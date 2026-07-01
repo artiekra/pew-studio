@@ -6,7 +6,7 @@ import {
   moveNode,
   removeNode,
   renameNode,
-} from "@/lib/fileSystem";
+} from "@/services/fileIO";
 import type { ProjectFileTree } from "@/types";
 
 export function useProjectFileSystem(projectId: string | undefined) {
