@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Theme Screenshot Generator</title>
+    <style>
+      body { 
+        margin: 0; 
+        padding: 40px; 
+        background: #e2e8f0; 
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        min-height: 100vh; 
+        font-family: sans-serif;
+      }
+      #editor { 
+        width: 600px; 
+        border-radius: 12px; 
+        overflow: hidden; 
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); 
+      }
+      .cm-editor { 
+        height: 100%; 
+        min-height: 300px; 
+        font-size: 15px; 
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Take a screenshot of this container -->
+    <div id="editor"></div>
+    <script type="module" src="./screenshot.js"></script>
+  </body>
+</html>
