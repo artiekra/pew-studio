@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { View, Pressable, Alert, Modal, TextInput } from "react-native";
+import { View, Pressable, Alert, Modal, TextInput, ScrollView } from "react-native";
 import { Stack, useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { Text } from "@/components/ui/text";
 import { Icon } from "@/components/ui/icon";
@@ -82,6 +82,7 @@ export default function ProjectScreen() {
     registerLayout,
     startDrag,
     onTreeLayout,
+    onScroll,
   } = useTreeDragAndDrop(fileTree, expandedFolders, move);
 
   const dragPreviewStyle = useAnimatedStyle(() => ({
@@ -156,7 +157,12 @@ export default function ProjectScreen() {
       <ExplorerContext.Provider value={{ state, dispatch, createFolder, createFile, rename, move, remove, fileTree }}>
       <View className="flex-1 bg-background" {...panResponder.panHandlers}>
         {/* ── File tree ─────────────────────────────────────────── */}
-        <View className="flex-1 p-4" ref={treeContainerRef} onLayout={onTreeLayout}>
+        <ScrollView
+          className="flex-1 p-4"
+          ref={treeContainerRef as any}
+          onLayout={onTreeLayout}
+          onScroll={onScroll}
+          scrollEventThrottle={16}>
           <View className="mb-2 flex-row gap-2">
             <Pressable
               className="flex-row items-center gap-2 rounded-lg px-3 py-2 active:opacity-70"
@@ -205,7 +211,7 @@ export default function ProjectScreen() {
               </Text>
             </View>
           )}
-        </View>
+        </ScrollView>
 
         {/* ── Bottom action bar ─────────────────────────────────── */}
         <View

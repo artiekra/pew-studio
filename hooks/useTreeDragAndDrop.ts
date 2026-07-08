@@ -1,5 +1,5 @@
 import * as React from "react";
-import { PanResponder, View } from "react-native";
+import { PanResponder, View, NativeSyntheticEvent, NativeScrollEvent } from "react-native";
 import { useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import type { FileNode, ProjectFileTree } from "@/types";
 
@@ -36,6 +36,12 @@ export function useTreeDragAndDrop(
   const dragY = useSharedValue(0);
   const dragOpacity = useSharedValue(0);
   const dragScale = useSharedValue(0.95);
+
+  const scrollOffsetRef = React.useRef(0);
+
+  const onScroll = React.useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    scrollOffsetRef.current = event.nativeEvent.contentOffset.y;
+  }, []);
 
   const treeAbsoluteYRef = React.useRef(0);
   const treeContainerRef = React.useRef<View>(null);
@@ -81,7 +87,7 @@ export function useTreeDragAndDrop(
       let foundTarget: string | null | undefined = null;
 
       for (const [nodeId, layout] of nodeLayoutsRef.current) {
-        const absoluteY = treeAbsoluteYRef.current + layout.relativeY;
+        const absoluteY = treeAbsoluteYRef.current + layout.relativeY - scrollOffsetRef.current;
         if (pageY >= absoluteY && pageY < absoluteY + layout.height) {
           if (nodeId === draggedId) {
             foundTarget = undefined;
@@ -170,5 +176,6 @@ export function useTreeDragAndDrop(
     registerLayout,
     startDrag,
     onTreeLayout,
+    onScroll,
   };
 }
