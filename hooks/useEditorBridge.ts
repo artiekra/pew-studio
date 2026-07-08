@@ -1,14 +1,27 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useColorScheme } from "react-native";
 import { readFileContent, writeFileContent } from "@/services/fileIO";
 import { Asset } from "expo-asset";
 import { File } from "expo-file-system";
 import type { EditorToNative } from "@/lib/messages/editorMessages";
 import type WebView from "react-native-webview";
+import { getEditorSettings, EditorTheme } from "@/lib/editorSettings";
+import { useFocusEffect } from "expo-router";
 
 export function useEditorBridge(projectId: string | undefined, fileId: string | undefined) {
   const webViewRef = useRef<WebView>(null);
   const colorScheme = useColorScheme();
+  const [editorThemeSetting, setEditorThemeSetting] = useState<EditorTheme>("system");
+
+  useFocusEffect(
+    useCallback(() => {
+      getEditorSettings().then((settings) => {
+        setEditorThemeSetting(settings.theme);
+      });
+    }, [])
+  );
+
+  const finalTheme = editorThemeSetting === "system" ? (colorScheme ?? "light") : editorThemeSetting;
 
   const fileExtension = fileId?.split(".").pop();
   const language = fileExtension === "json" ? "json" : fileExtension === "lua" ? "lua" : "";
@@ -56,7 +69,7 @@ export function useEditorBridge(projectId: string | undefined, fileId: string | 
           window.setEditorContent(${JSON.stringify(initialContent)});
         }
         if (window.setTheme) {
-          window.setTheme("${colorScheme}");
+          window.setTheme("${finalTheme}");
         }
         if (window.setLanguage) {
           window.setLanguage("${language}");
@@ -66,7 +79,7 @@ export function useEditorBridge(projectId: string | undefined, fileId: string | 
     } else {
       webViewRef.current?.injectJavaScript(`
         if (window.setTheme) {
-          window.setTheme("${colorScheme}");
+          window.setTheme("${finalTheme}");
         }
         if (window.setLanguage) {
           window.setLanguage("${language}");
@@ -93,11 +106,11 @@ export function useEditorBridge(projectId: string | undefined, fileId: string | 
   useEffect(() => {
     webViewRef.current?.injectJavaScript(`
       if (window.setTheme) {
-        window.setTheme("${colorScheme}");
+        window.setTheme("${finalTheme}");
       }
       true;
     `);
-  }, [colorScheme]);
+  }, [finalTheme]);
 
   return {
     webViewRef,
