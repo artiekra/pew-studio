@@ -1,5 +1,5 @@
 import * as FileSystem from "expo-file-system/legacy";
-import { ensureAssetsAreCopied } from "./assetService";
+import { ensureAssetsAreCopied, type ProjectTemplate } from "./assetService";
 import { importProjectFromZip } from "./zipService";
 import { getProjectDir } from "./fileIO";
 import type { Project } from "@/types";
@@ -28,7 +28,7 @@ async function saveProjects(projects: Project[]): Promise<void> {
   await FileSystem.writeAsStringAsync(PROJECTS_FILE, JSON.stringify(projects, null, 2));
 }
 
-export async function createProject(name: string): Promise<Project> {
+export async function createProject(name: string, template: ProjectTemplate = "basic"): Promise<Project> {
   const projects = await getProjects();
   const now = new Date().toISOString();
   const project: Project = {
@@ -42,7 +42,7 @@ export async function createProject(name: string): Promise<Project> {
   
   const projectDir = getProjectDir(project.id);
   await FileSystem.makeDirectoryAsync(projectDir, { intermediates: true });
-  await ensureAssetsAreCopied(project.id);
+  await ensureAssetsAreCopied(project.id, template);
   
   return project;
 }

@@ -2,7 +2,18 @@ import { Asset } from "expo-asset";
 import * as FileSystem from "expo-file-system/legacy";
 import { getProjectDir } from "./fileIO";
 
-export async function ensureAssetsAreCopied(projectId: string): Promise<void> {
+export type ProjectTemplate = "basic" | "blank" | "pseudo-infinity";
+
+export async function ensureAssetsAreCopied(
+  projectId: string,
+  template: ProjectTemplate = "basic"
+): Promise<void> {
+  if (template === "blank") {
+    // Blank Level: create no files or folders in the project
+    return;
+  }
+
+  // Basic Level & Pseudo-Infinity currently use the same boilerplate
   const projectDir = getProjectDir(projectId);
 
   const manifestData = require("../assets/basic-level/manifest.json");

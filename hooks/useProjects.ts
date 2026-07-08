@@ -10,6 +10,7 @@ import {
   duplicateProject,
 } from "@/services/projectRepository";
 import type { Project } from "@/types";
+import type { ProjectTemplate } from "@/services/assetService";
 
 export function useProjects() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -17,6 +18,7 @@ export function useProjects() {
   const [modalVisible, setModalVisible] = useState(false);
   const [actionModalVisible, setActionModalVisible] = useState(false);
   const [newName, setNewName] = useState("");
+  const [selectedTemplate, setSelectedTemplate] = useState<ProjectTemplate>("basic");
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   const [projectToRename, setProjectToRename] = useState<Project | null>(null);
   const [renameValue, setRenameValue] = useState("");
@@ -31,11 +33,12 @@ export function useProjects() {
   const handleCreate = useCallback(async () => {
     const trimmed = newName.trim();
     if (!trimmed) return;
-    const project = await createProject(trimmed);
+    const project = await createProject(trimmed, selectedTemplate);
     setProjects((prev) => [project, ...prev]);
     setNewName("");
+    setSelectedTemplate("basic");
     setModalVisible(false);
-  }, [newName]);
+  }, [newName, selectedTemplate]);
 
   const handleImport = useCallback(async () => {
     try {
@@ -122,6 +125,8 @@ export function useProjects() {
     setActionModalVisible,
     newName,
     setNewName,
+    selectedTemplate,
+    setSelectedTemplate,
     projectToDelete,
     setProjectToDelete,
     projectToRename,

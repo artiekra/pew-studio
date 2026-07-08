@@ -31,7 +31,9 @@ import {
   PencilIcon,
   PlusIcon,
   Trash2Icon,
+  ChevronDownIcon,
 } from "lucide-react-native";
+import { PortalHost } from "@rn-primitives/portal";
 import { useProjects } from "@/hooks/useProjects";
 import type { Project } from "@/types";
 
@@ -105,6 +107,8 @@ export function ProjectListScreen() {
     setActionModalVisible,
     newName,
     setNewName,
+    selectedTemplate,
+    setSelectedTemplate,
     projectToDelete,
     setProjectToDelete,
     projectToRename,
@@ -256,7 +260,37 @@ export function ProjectListScreen() {
               onSubmitEditing={handleCreate}
               returnKeyType="done"
             />
-            <View className="flex-row justify-end gap-3">
+
+            <View className="z-50 gap-2">
+              <Text className="text-sm font-medium text-muted-foreground">Template</Text>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Pressable className="flex-row items-center justify-between rounded-lg border border-border bg-secondary/50 px-4 py-3 active:opacity-80">
+                    <Text className="text-base text-foreground">
+                      {selectedTemplate === "blank"
+                        ? "Empty Level"
+                        : selectedTemplate === "basic"
+                          ? "Basic Level"
+                          : "Pseudo-Infinity"}
+                    </Text>
+                    <Icon as={ChevronDownIcon} className="size-5 text-muted-foreground" size={20} />
+                  </Pressable>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-64 p-1" portalHost="template-modal">
+                  <DropdownMenuItem onPress={() => setSelectedTemplate("blank")}>
+                    <Text>Empty Level</Text>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onPress={() => setSelectedTemplate("basic")}>
+                    <Text>Basic Level</Text>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onPress={() => setSelectedTemplate("pseudo-infinity")}>
+                    <Text>Pseudo-Infinity</Text>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </View>
+
+            <View className="mt-2 flex-row justify-end gap-3">
               <Button variant="ghost" onPress={() => setModalVisible(false)}>
                 <Text>Cancel</Text>
               </Button>
@@ -265,6 +299,8 @@ export function ProjectListScreen() {
               </Button>
             </View>
           </Pressable>
+          {/* Portal host inside modal so popups render above it */}
+          <PortalHost name="template-modal" />
         </Pressable>
       </Modal>
 
