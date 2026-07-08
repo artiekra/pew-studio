@@ -1,10 +1,32 @@
 import { Stack } from "expo-router";
-import { View, Pressable, ActivityIndicator } from "react-native";
+import { View, Pressable, ActivityIndicator, ScrollView } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Icon } from "@/components/ui/icon";
-import { CheckIcon, MonitorIcon, SunIcon, MoonIcon } from "lucide-react-native";
+import { CheckIcon, MonitorIcon, SunIcon, MoonIcon, PaletteIcon } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { EditorTheme, getEditorSettings, saveEditorSettings } from "@/lib/editorSettings";
+
+const THEMES: { label: string; value: EditorTheme; icon: any }[] = [
+  { label: "System", value: "system", icon: MonitorIcon },
+  { label: "Light", value: "light", icon: SunIcon },
+  { label: "Dark", value: "dark", icon: MoonIcon },
+  { label: "Amy", value: "amy", icon: PaletteIcon },
+  { label: "Ayu Light", value: "ayuLight", icon: PaletteIcon },
+  { label: "Barf", value: "barf", icon: PaletteIcon },
+  { label: "Bespin", value: "bespin", icon: PaletteIcon },
+  { label: "Birds of Paradise", value: "birdsOfParadise", icon: PaletteIcon },
+  { label: "Boys and Girls", value: "boysAndGirls", icon: PaletteIcon },
+  { label: "Clouds", value: "clouds", icon: PaletteIcon },
+  { label: "Cobalt", value: "cobalt", icon: PaletteIcon },
+  { label: "Cool Glow", value: "coolGlow", icon: PaletteIcon },
+  { label: "Dracula", value: "dracula", icon: PaletteIcon },
+  { label: "Espresso", value: "espresso", icon: PaletteIcon },
+  { label: "Noctis Lilac", value: "noctisLilac", icon: PaletteIcon },
+  { label: "Rosé Pine Dawn", value: "rosePineDawn", icon: PaletteIcon },
+  { label: "Smoothy", value: "smoothy", icon: PaletteIcon },
+  { label: "Solarized Light", value: "solarizedLight", icon: PaletteIcon },
+  { label: "Tomorrow", value: "tomorrow", icon: PaletteIcon },
+];
 
 export default function EditorThemeScreen() {
   const [theme, setTheme] = useState<EditorTheme>("system");
@@ -36,28 +58,17 @@ export default function EditorThemeScreen() {
   return (
     <>
       <Stack.Screen options={{ title: "Code Editor Theme" }} />
-      <View className="flex-1 bg-background p-6">
-        <View className="gap-3">
+      <ScrollView className="flex-1 bg-background" contentContainerClassName="p-6 gap-3 pb-12">
+        {THEMES.map((t) => (
           <ThemeOption 
-            label="System" 
-            icon={MonitorIcon} 
-            selected={theme === "system"} 
-            onSelect={() => handleSelect("system")} 
+            key={t.value}
+            label={t.label} 
+            icon={t.icon} 
+            selected={theme === t.value} 
+            onSelect={() => handleSelect(t.value)} 
           />
-          <ThemeOption 
-            label="Light" 
-            icon={SunIcon} 
-            selected={theme === "light"} 
-            onSelect={() => handleSelect("light")} 
-          />
-          <ThemeOption 
-            label="Dark" 
-            icon={MoonIcon} 
-            selected={theme === "dark"} 
-            onSelect={() => handleSelect("dark")} 
-          />
-        </View>
-      </View>
+        ))}
+      </ScrollView>
     </>
   );
 }

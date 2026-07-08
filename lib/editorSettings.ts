@@ -1,6 +1,25 @@
 import * as FileSystem from "expo-file-system/legacy";
 
-export type EditorTheme = "system" | "light" | "dark";
+export type EditorTheme = 
+  | "system" 
+  | "light" 
+  | "dark" 
+  | "amy" 
+  | "ayuLight" 
+  | "barf" 
+  | "bespin" 
+  | "birdsOfParadise" 
+  | "boysAndGirls" 
+  | "clouds" 
+  | "cobalt" 
+  | "coolGlow" 
+  | "dracula" 
+  | "espresso" 
+  | "noctisLilac" 
+  | "rosePineDawn" 
+  | "smoothy" 
+  | "solarizedLight" 
+  | "tomorrow";
 
 export type EditorSettings = {
   theme: EditorTheme;
