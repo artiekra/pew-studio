@@ -99,11 +99,11 @@ export default function AiScreen() {
   useFocusEffect(
     useCallback(() => {
       setIsModelsLoading(true);
-      getAiSettings().then(settings => {
+      getAiSettings().then((settings) => {
         if (settings) {
           setAiConfigured(settings.enabled && !!settings.apiUrl && !!settings.apiKey);
           setProviderModel(getProviderDefaultModel(settings.provider));
-          fetchAvailableModels().then(models => {
+          fetchAvailableModels().then((models) => {
             if (models && models.length > 0) {
               setAvailableModels(models);
               // Ensure default is in the list, or select the first one if not
@@ -150,18 +150,16 @@ export default function AiScreen() {
 
       // Create new chat if none active
       if (!currentChat) {
-        const title =
-          textToSend.slice(0, 40) + (textToSend.length > 40 ? "..." : "");
+        const title = textToSend.slice(0, 40) + (textToSend.length > 40 ? "..." : "");
         currentChat = await createChat(projectId, title);
         setActiveChat(currentChat);
       }
 
       // Add user message
-      const updatedChatWithUser = await addMessageToChat(
-        projectId,
-        currentChat.id,
-        { role: "user", content: textToSend }
-      );
+      const updatedChatWithUser = await addMessageToChat(projectId, currentChat.id, {
+        role: "user",
+        content: textToSend,
+      });
       if (updatedChatWithUser) {
         currentChat = updatedChatWithUser;
         setActiveChat({ ...currentChat });
@@ -202,11 +200,7 @@ export default function AiScreen() {
           : undefined,
       };
 
-      const finalChat = await addMessageToChat(
-        projectId,
-        currentChat.id,
-        assistantMsg
-      );
+      const finalChat = await addMessageToChat(projectId, currentChat.id, assistantMsg);
       if (finalChat) {
         setActiveChat({ ...finalChat });
       }
@@ -314,7 +308,7 @@ export default function AiScreen() {
 
     // Assistant message
     return (
-      <View className="max-w-[90%] self-start gap-2">
+      <View className="max-w-[90%] gap-2 self-start">
         {/* Tool calls */}
         {item.toolCalls && item.toolCalls.length > 0 && (
           <View className="gap-1">
@@ -404,10 +398,7 @@ export default function AiScreen() {
         options={{
           title: activeChat?.title || "AI Assistant",
           headerLeft: () => (
-            <Pressable
-              onPress={() => router.back()}
-              className="ios:ml-0 ml-2 mr-6 p-1"
-              hitSlop={8}>
+            <Pressable onPress={() => router.back()} className="ios:ml-0 ml-2 mr-6 p-1" hitSlop={8}>
               <Icon as={ArrowLeftIcon} className="size-6 text-foreground" size={24} />
             </Pressable>
           ),
@@ -421,11 +412,7 @@ export default function AiScreen() {
         style={{ paddingBottom: Math.max(insets.bottom, 16) }}>
         {aiConfigured === false ? (
           <View className="flex-1 items-center justify-center">
-            <Icon
-              as={SparklesIcon}
-              className="mb-6 size-16 text-muted-foreground"
-              size={64}
-            />
+            <Icon as={SparklesIcon} className="mb-6 size-16 text-muted-foreground" size={64} />
             <Text className="mb-2 text-center text-xl font-bold text-foreground">
               AI Not Configured
             </Text>
@@ -445,7 +432,8 @@ export default function AiScreen() {
               {isChatEmpty ? (
                 <View className="flex-1 items-center justify-center px-8">
                   <Text className="text-center text-sm text-muted-foreground">
-                    This is AI chat. You can reference files with @filename.
+                    This is your AI agent. It can read and edit files to help develop your level.
+                    You can always undo the actions!
                   </Text>
 
                   {chats.length > 0 && (
@@ -468,9 +456,7 @@ export default function AiScreen() {
                               className="size-4 text-muted-foreground"
                               size={16}
                             />
-                            <Text
-                              className="flex-1 text-sm text-foreground"
-                              numberOfLines={1}>
+                            <Text className="flex-1 text-sm text-foreground" numberOfLines={1}>
                               {chat.title}
                             </Text>
                           </Pressable>
@@ -506,9 +492,7 @@ export default function AiScreen() {
                   {isLoading && liveToolCalls.length > 0 && (
                     <View className="border-t border-border/50 px-4 py-2">
                       {liveToolCalls.slice(-3).map((tc, idx) => (
-                        <View
-                          key={idx}
-                          className="flex-row items-center gap-2 py-0.5">
+                        <View key={idx} className="flex-row items-center gap-2 py-0.5">
                           <Icon
                             as={getToolIcon(tc.name)}
                             className="size-3 text-muted-foreground"
@@ -555,21 +539,23 @@ export default function AiScreen() {
                   editable={!isLoading}
                 />
                 <View className="mt-2 flex-row items-center justify-between px-1">
-                  <Pressable 
+                  <Pressable
                     className="flex-row items-center gap-1 rounded-lg px-2 py-1 active:opacity-70"
-                    onPress={() => setIsModelSelectorVisible(true)}
-                  >
+                    onPress={() => setIsModelSelectorVisible(true)}>
                     {isModelsLoading ? (
-                      <ActivityIndicator size="small" color="#888" style={{ width: 12, height: 12, marginRight: 4 }} />
+                      <ActivityIndicator
+                        size="small"
+                        color="#888"
+                        style={{ width: 12, height: 12, marginRight: 4 }}
+                      />
                     ) : null}
-                    <Text className="text-xs font-medium text-muted-foreground" numberOfLines={1} style={{ maxWidth: 150 }}>
+                    <Text
+                      className="text-xs font-medium text-muted-foreground"
+                      numberOfLines={1}
+                      style={{ maxWidth: 150 }}>
                       {providerModel}
                     </Text>
-                    <Icon
-                      as={ChevronDownIcon}
-                      className="size-3 text-muted-foreground"
-                      size={12}
-                    />
+                    <Icon as={ChevronDownIcon} className="size-3 text-muted-foreground" size={12} />
                   </Pressable>
 
                   <View className="flex-row items-center gap-2">
@@ -581,9 +567,7 @@ export default function AiScreen() {
                     </Pressable>
                     <Pressable
                       className={`rounded-full p-2 ${
-                        inputText.trim() && !isLoading
-                          ? "bg-primary active:opacity-70"
-                          : "bg-muted"
+                        inputText.trim() && !isLoading ? "bg-primary active:opacity-70" : "bg-muted"
                       }`}
                       onPress={handleSend}
                       disabled={!inputText.trim() || isLoading}>
@@ -600,8 +584,6 @@ export default function AiScreen() {
                   </View>
                 </View>
               </View>
-
-
             </View>
           </>
         )}
@@ -620,20 +602,14 @@ export default function AiScreen() {
           }}>
           <View className="flex-row items-center justify-between border-b border-border px-4 py-3">
             <Text className="text-xl font-bold text-foreground">All Chats</Text>
-            <Pressable
-              onPress={() => setIsAllChatsModalVisible(false)}
-              className="-mr-2 p-2">
+            <Pressable onPress={() => setIsAllChatsModalVisible(false)} className="-mr-2 p-2">
               <Icon as={XIcon} className="size-6 text-foreground" size={24} />
             </Pressable>
           </View>
 
           <View className="border-b border-border p-4">
             <View className="flex-row items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
-              <Icon
-                as={SearchIcon}
-                className="size-4 text-muted-foreground"
-                size={16}
-              />
+              <Icon as={SearchIcon} className="size-4 text-muted-foreground" size={16} />
               <TextInput
                 className="flex-1 text-base text-foreground"
                 placeholder="Search chats..."
@@ -643,11 +619,7 @@ export default function AiScreen() {
               />
               {searchQuery.length > 0 && (
                 <Pressable onPress={() => setSearchQuery("")}>
-                  <Icon
-                    as={XIcon}
-                    className="size-4 text-muted-foreground"
-                    size={16}
-                  />
+                  <Icon as={XIcon} className="size-4 text-muted-foreground" size={16} />
                 </Pressable>
               )}
             </View>
@@ -687,20 +659,14 @@ export default function AiScreen() {
           }}>
           <View className="flex-row items-center justify-between border-b border-border px-4 py-3">
             <Text className="text-xl font-bold text-foreground">Select AI Model</Text>
-            <Pressable
-              onPress={() => setIsModelSelectorVisible(false)}
-              className="-mr-2 p-2">
+            <Pressable onPress={() => setIsModelSelectorVisible(false)} className="-mr-2 p-2">
               <Icon as={XIcon} className="size-6 text-foreground" size={24} />
             </Pressable>
           </View>
 
           <View className="border-b border-border p-4">
             <View className="flex-row items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
-              <Icon
-                as={SearchIcon}
-                className="size-4 text-muted-foreground"
-                size={16}
-              />
+              <Icon as={SearchIcon} className="size-4 text-muted-foreground" size={16} />
               <TextInput
                 className="flex-1 text-base text-foreground"
                 placeholder="Search models..."
@@ -710,18 +676,20 @@ export default function AiScreen() {
               />
               {modelSearchQuery.length > 0 && (
                 <Pressable onPress={() => setModelSearchQuery("")}>
-                  <Icon
-                    as={XIcon}
-                    className="size-4 text-muted-foreground"
-                    size={16}
-                  />
+                  <Icon as={XIcon} className="size-4 text-muted-foreground" size={16} />
                 </Pressable>
               )}
             </View>
           </View>
 
           <FlatList
-            data={availableModels.length > 0 ? availableModels.filter(m => m.toLowerCase().includes(modelSearchQuery.toLowerCase())) : [providerModel]}
+            data={
+              availableModels.length > 0
+                ? availableModels.filter((m) =>
+                    m.toLowerCase().includes(modelSearchQuery.toLowerCase())
+                  )
+                : [providerModel]
+            }
             keyExtractor={(item) => item}
             renderItem={({ item }) => (
               <Pressable
