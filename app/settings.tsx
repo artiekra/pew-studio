@@ -1,7 +1,7 @@
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { Stack, useRouter } from "expo-router";
-import { MoonStarIcon, SunIcon, SparklesIcon, ChevronRightIcon, PaletteIcon, InfoIcon } from "lucide-react-native";
+import { MoonStarIcon, SunIcon, SparklesIcon, ChevronRightIcon, PaletteIcon, InfoIcon, RocketIcon } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
 import * as React from "react";
 import { View, Pressable } from "react-native";
@@ -55,6 +55,16 @@ export default function SettingsScreen() {
             <View className="flex-row items-center gap-3">
               <Icon as={SparklesIcon} className="size-5 text-foreground" size={20} />
               <Text className="text-base font-medium text-foreground">AI Settings</Text>
+            </View>
+            <Icon as={ChevronRightIcon} className="size-5 text-muted-foreground" size={20} />
+          </Pressable>
+
+          <Pressable
+            onPress={() => router.push("/release-settings")}
+            className="flex-row items-center justify-between rounded-xl border border-border bg-card p-4 active:opacity-70">
+            <View className="flex-row items-center gap-3">
+              <Icon as={RocketIcon} className="size-5 text-foreground" size={20} />
+              <Text className="text-base font-medium text-foreground">Release Settings</Text>
             </View>
             <Icon as={ChevronRightIcon} className="size-5 text-muted-foreground" size={20} />
           </Pressable>

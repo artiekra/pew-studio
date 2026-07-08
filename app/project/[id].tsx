@@ -22,6 +22,7 @@ import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { isAiConfigured } from "@/lib/aiSettings";
+import { isReleaseConfigured } from "@/lib/releaseSettings";
 
 import { getProjects } from "@/services/projectRepository";
 import { exportProjectAsZip } from "@/services/zipService";
@@ -52,9 +53,8 @@ export default function ProjectScreen() {
     status: "success" | "error";
     message: string;
   } | null>(null);
+  const [releasePromptVisible, setReleasePromptVisible] = useState(false);
   const insets = useSafeAreaInsets();
-
-
   // File system state & operations
   const {
     fileTree,
@@ -220,7 +220,15 @@ export default function ProjectScreen() {
             </Button>
             <Button
               variant="secondary"
-              className="flex-1 flex-row items-center justify-center gap-2">
+              className="flex-1 flex-row items-center justify-center gap-2"
+              onPress={async () => {
+                const configured = await isReleaseConfigured();
+                if (!configured) {
+                  setReleasePromptVisible(true);
+                } else {
+                  router.push({ pathname: "/release/[projectId]", params: { projectId: id } });
+                }
+              }}>
               <Icon as={RocketIcon} className="size-4 text-secondary-foreground" size={16} />
               <Text className="font-semibold text-secondary-foreground">Release</Text>
             </Button>
@@ -305,6 +313,34 @@ export default function ProjectScreen() {
               <Text className={exportStatus?.status === "success" ? "text-white" : ""}>
                 Dismiss
               </Text>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ── Release Not Configured Alert ──────────────────────── */}
+      <AlertDialog
+        open={releasePromptVisible}
+        onOpenChange={setReleasePromptVisible}>
+        <AlertDialogContent>
+          <AlertDialogHeader className="items-center sm:items-center">
+            <AlertDialogTitle>Release Settings Required</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+              You need to configure your email and password in Release Settings before you can publish a release.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row justify-center gap-3 sm:justify-center">
+            <AlertDialogAction
+              className="bg-muted"
+              onPress={() => setReleasePromptVisible(false)}>
+              <Text className="text-foreground">Cancel</Text>
+            </AlertDialogAction>
+            <AlertDialogAction
+              onPress={() => {
+                setReleasePromptVisible(false);
+                router.push("/release-settings");
+              }}>
+              <Text className="text-primary-foreground">Go to Settings</Text>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
