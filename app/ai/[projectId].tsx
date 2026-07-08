@@ -571,44 +571,36 @@ export default function AiScreen() {
                     />
                   </Pressable>
 
-                  <Pressable
-                    className={`rounded-full p-2 ${
-                      inputText.trim() && !isLoading
-                        ? "bg-primary active:opacity-70"
-                        : "bg-muted"
-                    }`}
-                    onPress={handleSend}
-                    disabled={!inputText.trim() || isLoading}>
-                    <Icon
-                      as={SendIcon}
-                      className={`size-4 ${
+                  <View className="flex-row items-center gap-2">
+                    <Pressable
+                      className="rounded-full bg-muted p-2 active:opacity-70"
+                      onPress={handleNewChat}
+                      disabled={isLoading}>
+                      <Icon as={PlusIcon} className="size-4 text-foreground" size={16} />
+                    </Pressable>
+                    <Pressable
+                      className={`rounded-full p-2 ${
                         inputText.trim() && !isLoading
-                          ? "text-primary-foreground"
-                          : "text-muted-foreground"
+                          ? "bg-primary active:opacity-70"
+                          : "bg-muted"
                       }`}
-                      size={16}
-                    />
-                  </Pressable>
+                      onPress={handleSend}
+                      disabled={!inputText.trim() || isLoading}>
+                      <Icon
+                        as={SendIcon}
+                        className={`size-4 ${
+                          inputText.trim() && !isLoading
+                            ? "text-primary-foreground"
+                            : "text-muted-foreground"
+                        }`}
+                        size={16}
+                      />
+                    </Pressable>
+                  </View>
                 </View>
               </View>
 
-              <View className="mt-3 flex-row items-center justify-center">
-                <Button
-                  variant="ghost"
-                  className="flex-row items-center gap-2"
-                  onPress={handleNewChat}>
-                  <Icon as={PlusIcon} className="size-4 text-foreground" size={16} />
-                  <Text className="font-semibold text-foreground">New Chat</Text>
-                </Button>
-                {chats.length > 0 && isChatEmpty && chats.length <= 5 && (
-                  <Button
-                    variant="ghost"
-                    className="ml-2 flex-row items-center gap-2"
-                    onPress={() => setIsAllChatsModalVisible(true)}>
-                    <Text className="font-semibold text-muted-foreground">All Chats</Text>
-                  </Button>
-                )}
-              </View>
+
             </View>
           </>
         )}
