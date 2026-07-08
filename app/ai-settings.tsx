@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { View, TextInput, Alert, Image } from "react-native";
+import { View, TextInput, Alert, Image, KeyboardAvoidingView, ScrollView, Platform } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { Pressable } from "react-native";
 import { Text } from "@/components/ui/text";
@@ -120,153 +120,160 @@ export default function AiSettingsScreen() {
         }}
       />
 
-      <View className="flex-1 bg-background p-6">
-        <View className="flex-1 gap-6">
-          {/* Enable AI Toggle */}
-          <View className="flex-row justify-between rounded-xl">
-            <View className="flex-1 pr-4">
-              <Text className="mb-1 text-base font-semibold text-foreground">
-                Enable AI Features
-              </Text>
-              {/* <Text className="text-sm text-muted-foreground"> */}
-              {/*   Turn on to use a cloud AI provider for intelligent features. */}
-              {/* </Text> */}
-            </View>
-            <Switch
-              checked={enabled}
-              onCheckedChange={async (newValue) => {
-                setEnabled(newValue);
-                if (!newValue) {
-                  try {
-                    await saveAiSettings({
-                      enabled: false,
-                      provider,
-                      apiUrl: apiUrl.trim(),
-                      apiKey: apiKey.trim(),
-                    });
-                  } catch (err) {
-                    console.error("Failed to save AI settings on toggle", err);
+      <KeyboardAvoidingView
+        behavior="padding"
+        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 80}
+        className="flex-1 bg-background">
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, padding: 24 }}
+          keyboardShouldPersistTaps="handled">
+          <View className="flex-1 gap-6">
+            {/* Enable AI Toggle */}
+            <View className="flex-row justify-between rounded-xl">
+              <View className="flex-1 pr-4">
+                <Text className="mb-1 text-base font-semibold text-foreground">
+                  Enable AI Features
+                </Text>
+                {/* <Text className="text-sm text-muted-foreground"> */}
+                {/*   Turn on to use a cloud AI provider for intelligent features. */}
+                {/* </Text> */}
+              </View>
+              <Switch
+                checked={enabled}
+                onCheckedChange={async (newValue) => {
+                  setEnabled(newValue);
+                  if (!newValue) {
+                    try {
+                      await saveAiSettings({
+                        enabled: false,
+                        provider,
+                        apiUrl: apiUrl.trim(),
+                        apiKey: apiKey.trim(),
+                      });
+                    } catch (err) {
+                      console.error("Failed to save AI settings on toggle", err);
+                    }
                   }
-                }
-              }}
-            />
-          </View>
-
-          {enabled && (
-            <>
-              {/* Provider Selection */}
-              <View className="gap-2">
-                <View className="flex-row items-center gap-2">
-                  <Icon as={LibraryIcon} className="size-4 text-muted-foreground" size={16} />
-                  <Text className="text-sm font-medium text-foreground">AI Provider</Text>
-                </View>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-70">
-                      <View className="flex-row items-center gap-2">
-                        {(() => {
-                          const p = AI_PROVIDERS.find((p) => p.value === provider) || AI_PROVIDERS[AI_PROVIDERS.length - 1];
-                          return (
-                            <>
-                              {p.domain ? (
-                                <Image
-                                  source={{ uri: `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://${p.domain}&size=64` }}
-                                  style={{ width: 16, height: 16, borderRadius: 4 }}
-                                />
-                              ) : (
-                                <Icon as={p.icon!} className={`size-4 ${p.color}`} size={16} />
-                              )}
-                              <Text className="text-base text-foreground">{p.label}</Text>
-                            </>
-                          );
-                        })()}
-                      </View>
-                      <Icon as={ChevronDownIcon} className="size-4 text-muted-foreground" size={16} />
-                    </Pressable>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-64 p-1">
-                    {AI_PROVIDERS.map((p) => (
-                      <DropdownMenuItem
-                        key={p.value}
-                        onPress={() => {
-                          setProvider(p.value);
-                          if (p.value !== "custom") {
-                            setApiUrl(p.url);
-                          }
-                        }}>
-                        {p.domain ? (
-                          <Image
-                            source={{ uri: `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://${p.domain}&size=64` }}
-                            style={{ width: 16, height: 16, borderRadius: 4, marginRight: 8 }}
-                          />
-                        ) : (
-                          <Icon as={p.icon!} className={`mr-2 size-4 ${p.color}`} size={16} />
-                        )}
-                        <Text className="text-foreground">{p.label}</Text>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </View>
-
-              {/* API URL */}
-              <View className="gap-2">
-                <View className="flex-row items-center gap-2">
-                  <Icon as={ServerIcon} className="size-4 text-muted-foreground" size={16} />
-                  <Text className="text-sm font-medium text-foreground">API URL</Text>
-                </View>
-                <TextInput
-                  className={`rounded-xl border border-border px-4 py-3 text-base ${
-                    provider !== "custom" ? "bg-muted text-muted-foreground opacity-70" : "bg-card text-foreground"
-                  }`}
-                  placeholder="https://api.example.com/v1/chat"
-                  placeholderTextColor="hsl(0 0% 45%)"
-                  value={apiUrl}
-                  onChangeText={setApiUrl}
-                  editable={provider === "custom"}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  keyboardType="url"
-                />
-              </View>
-
-              {/* API Key */}
-              <View className="gap-2">
-                <View className="flex-row items-center gap-2">
-                  <Icon as={KeyRoundIcon} className="size-4 text-muted-foreground" size={16} />
-                  <Text className="text-sm font-medium text-foreground">API Key</Text>
-                </View>
-                <TextInput
-                  className="rounded-xl border border-border bg-card px-4 py-3 text-base text-foreground"
-                  placeholder="sk-..."
-                  placeholderTextColor="hsl(0 0% 45%)"
-                  value={apiKey}
-                  onChangeText={setApiKey}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  secureTextEntry
-                />
-              </View>
-            </>
-          )}
-        </View>
-
-        {/* Save button */}
-        {enabled && (
-          <View style={{ paddingBottom: Math.max(insets.bottom, 16) }}>
-            <Button className="flex-row items-center justify-center gap-2" onPress={handleSave} disabled={isTesting}>
-              <Icon
-                as={isTesting ? ServerIcon : SaveIcon}
-                className="size-4 text-primary-foreground"
-                size={16}
+                }}
               />
-              <Text className="font-semibold text-primary-foreground">
-                {isTesting ? "Testing Connection..." : "Save"}
-              </Text>
-            </Button>
+            </View>
+
+            {enabled && (
+              <>
+                {/* Provider Selection */}
+                <View className="gap-2">
+                  <View className="flex-row items-center gap-2">
+                    <Icon as={LibraryIcon} className="size-4 text-muted-foreground" size={16} />
+                    <Text className="text-sm font-medium text-foreground">AI Provider</Text>
+                  </View>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-70">
+                        <View className="flex-row items-center gap-2">
+                          {(() => {
+                            const p = AI_PROVIDERS.find((p) => p.value === provider) || AI_PROVIDERS[AI_PROVIDERS.length - 1];
+                            return (
+                              <>
+                                {p.domain ? (
+                                  <Image
+                                    source={{ uri: `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://${p.domain}&size=64` }}
+                                    style={{ width: 16, height: 16, borderRadius: 4 }}
+                                  />
+                                ) : (
+                                  <Icon as={p.icon!} className={`size-4 ${p.color}`} size={16} />
+                                )}
+                                <Text className="text-base text-foreground">{p.label}</Text>
+                              </>
+                            );
+                          })()}
+                        </View>
+                        <Icon as={ChevronDownIcon} className="size-4 text-muted-foreground" size={16} />
+                      </Pressable>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-64 p-1">
+                      {AI_PROVIDERS.map((p) => (
+                        <DropdownMenuItem
+                          key={p.value}
+                          onPress={() => {
+                            setProvider(p.value);
+                            if (p.value !== "custom") {
+                              setApiUrl(p.url);
+                            }
+                          }}>
+                          {p.domain ? (
+                            <Image
+                              source={{ uri: `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://${p.domain}&size=64` }}
+                              style={{ width: 16, height: 16, borderRadius: 4, marginRight: 8 }}
+                            />
+                          ) : (
+                            <Icon as={p.icon!} className={`mr-2 size-4 ${p.color}`} size={16} />
+                          )}
+                          <Text className="text-foreground">{p.label}</Text>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </View>
+
+                {/* API URL */}
+                <View className="gap-2">
+                  <View className="flex-row items-center gap-2">
+                    <Icon as={ServerIcon} className="size-4 text-muted-foreground" size={16} />
+                    <Text className="text-sm font-medium text-foreground">API URL</Text>
+                  </View>
+                  <TextInput
+                    className={`rounded-xl border border-border px-4 py-3 text-base ${
+                      provider !== "custom" ? "bg-muted text-muted-foreground opacity-70" : "bg-card text-foreground"
+                    }`}
+                    placeholder="https://api.example.com/v1/chat"
+                    placeholderTextColor="hsl(0 0% 45%)"
+                    value={apiUrl}
+                    onChangeText={setApiUrl}
+                    editable={provider === "custom"}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    keyboardType="url"
+                  />
+                </View>
+
+                {/* API Key */}
+                <View className="gap-2">
+                  <View className="flex-row items-center gap-2">
+                    <Icon as={KeyRoundIcon} className="size-4 text-muted-foreground" size={16} />
+                    <Text className="text-sm font-medium text-foreground">API Key</Text>
+                  </View>
+                  <TextInput
+                    className="rounded-xl border border-border bg-card px-4 py-3 text-base text-foreground"
+                    placeholder="sk-..."
+                    placeholderTextColor="hsl(0 0% 45%)"
+                    value={apiKey}
+                    onChangeText={setApiKey}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    secureTextEntry
+                  />
+                </View>
+              </>
+            )}
           </View>
-        )}
-      </View>
+
+          {/* Save button */}
+          {enabled && (
+            <View style={{ paddingTop: 24, paddingBottom: Math.max(insets.bottom, 16) }}>
+              <Button className="flex-row items-center justify-center gap-2" onPress={handleSave} disabled={isTesting}>
+                <Icon
+                  as={isTesting ? ServerIcon : SaveIcon}
+                  className="size-4 text-primary-foreground"
+                  size={16}
+                />
+                <Text className="font-semibold text-primary-foreground">
+                  {isTesting ? "Testing Connection..." : "Save"}
+                </Text>
+              </Button>
+            </View>
+          )}
+        </ScrollView>
+      </KeyboardAvoidingView>
       
       {/* ── Save Result Alert ───────────────────────────────── */}
       <AlertDialog

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { View, TextInput } from "react-native";
+import { View, TextInput, KeyboardAvoidingView, ScrollView, Platform } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { Pressable } from "react-native";
 import { Text } from "@/components/ui/text";
@@ -99,103 +99,110 @@ export default function ReleaseSettingsScreen() {
         }}
       />
 
-      <View className="flex-1 bg-background p-6">
-        <View className="flex-1 gap-6">
-          {/* Enable Release Features Toggle */}
-          <View className="flex-row justify-between rounded-xl">
-            <View className="flex-1 pr-4">
-              <Text className="mb-1 text-base font-semibold text-foreground">
-                Enable Release Features
-              </Text>
-            </View>
-            <Switch
-              checked={enabled}
-              onCheckedChange={async (newValue) => {
-                setEnabled(newValue);
-                if (!newValue) {
-                  try {
-                    await saveReleaseSettings({
-                      enabled: false,
-                      email: email.trim(),
-                      password: password.trim(),
-                    });
-                  } catch (err) {
-                    console.error("Failed to save release settings on toggle", err);
-                  }
-                }
-              }}
-            />
-          </View>
-
-          {enabled && (
-            <>
-              {/* Info Block */}
-              <View className="flex-row items-center gap-3 rounded-xl border border-blue-500/20 bg-blue-500/10 p-4">
-                <Icon as={InfoIcon} className="size-5 text-blue-500" size={20} />
-                <Text className="flex-1 text-sm text-blue-500 dark:text-blue-400">
-                  Please enter email and password from your PewPewLive account. Credentials are
-                  stored locally on your device.
+      <KeyboardAvoidingView
+        behavior="padding"
+        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 80}
+        className="flex-1 bg-background">
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, padding: 24 }}
+          keyboardShouldPersistTaps="handled">
+          <View className="flex-1 gap-6">
+            {/* Enable Release Features Toggle */}
+            <View className="flex-row justify-between rounded-xl">
+              <View className="flex-1 pr-4">
+                <Text className="mb-1 text-base font-semibold text-foreground">
+                  Enable Release Features
                 </Text>
               </View>
-
-              {/* Email */}
-              <View className="gap-2">
-                <View className="flex-row items-center gap-2">
-                  <Icon as={MailIcon} className="size-4 text-muted-foreground" size={16} />
-                  <Text className="text-sm font-medium text-foreground">Email</Text>
-                </View>
-                <TextInput
-                  className="rounded-xl border border-border bg-card px-4 py-3 text-base text-foreground"
-                  placeholder="your@email.com"
-                  placeholderTextColor="hsl(0 0% 45%)"
-                  value={email}
-                  onChangeText={setEmail}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  keyboardType="email-address"
-                />
-              </View>
-
-              {/* Password */}
-              <View className="gap-2">
-                <View className="flex-row items-center gap-2">
-                  <Icon as={KeyRoundIcon} className="size-4 text-muted-foreground" size={16} />
-                  <Text className="text-sm font-medium text-foreground">Password</Text>
-                </View>
-                <TextInput
-                  className="rounded-xl border border-border bg-card px-4 py-3 text-base text-foreground"
-                  placeholder="password"
-                  placeholderTextColor="hsl(0 0% 45%)"
-                  value={password}
-                  onChangeText={setPassword}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  secureTextEntry
-                />
-              </View>
-            </>
-          )}
-        </View>
-
-        {/* Save button */}
-        {enabled && (
-          <View style={{ paddingBottom: Math.max(insets.bottom, 16) }}>
-            <Button
-              className="flex-row items-center justify-center gap-2"
-              onPress={handleSave}
-              disabled={isTesting}>
-              <Icon
-                as={isTesting ? ServerIcon : SaveIcon}
-                className="size-4 text-primary-foreground"
-                size={16}
+              <Switch
+                checked={enabled}
+                onCheckedChange={async (newValue) => {
+                  setEnabled(newValue);
+                  if (!newValue) {
+                    try {
+                      await saveReleaseSettings({
+                        enabled: false,
+                        email: email.trim(),
+                        password: password.trim(),
+                      });
+                    } catch (err) {
+                      console.error("Failed to save release settings on toggle", err);
+                    }
+                  }
+                }}
               />
-              <Text className="font-semibold text-primary-foreground">
-                {isTesting ? "Testing Connection..." : "Save"}
-              </Text>
-            </Button>
+            </View>
+
+            {enabled && (
+              <>
+                {/* Info Block */}
+                <View className="flex-row items-center gap-3 rounded-xl border border-blue-500/20 bg-blue-500/10 p-4">
+                  <Icon as={InfoIcon} className="size-5 text-blue-500" size={20} />
+                  <Text className="flex-1 text-sm text-blue-500 dark:text-blue-400">
+                    Please enter email and password from your PewPewLive account. Credentials are
+                    stored locally on your device.
+                  </Text>
+                </View>
+
+                {/* Email */}
+                <View className="gap-2">
+                  <View className="flex-row items-center gap-2">
+                    <Icon as={MailIcon} className="size-4 text-muted-foreground" size={16} />
+                    <Text className="text-sm font-medium text-foreground">Email</Text>
+                  </View>
+                  <TextInput
+                    className="rounded-xl border border-border bg-card px-4 py-3 text-base text-foreground"
+                    placeholder="your@email.com"
+                    placeholderTextColor="hsl(0 0% 45%)"
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    keyboardType="email-address"
+                  />
+                </View>
+
+                {/* Password */}
+                <View className="gap-2">
+                  <View className="flex-row items-center gap-2">
+                    <Icon as={KeyRoundIcon} className="size-4 text-muted-foreground" size={16} />
+                    <Text className="text-sm font-medium text-foreground">Password</Text>
+                  </View>
+                  <TextInput
+                    className="rounded-xl border border-border bg-card px-4 py-3 text-base text-foreground"
+                    placeholder="password"
+                    placeholderTextColor="hsl(0 0% 45%)"
+                    value={password}
+                    onChangeText={setPassword}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    secureTextEntry
+                  />
+                </View>
+              </>
+            )}
           </View>
-        )}
-      </View>
+
+          {/* Save button */}
+          {enabled && (
+            <View style={{ paddingTop: 24, paddingBottom: Math.max(insets.bottom, 16) }}>
+              <Button
+                className="flex-row items-center justify-center gap-2"
+                onPress={handleSave}
+                disabled={isTesting}>
+                <Icon
+                  as={isTesting ? ServerIcon : SaveIcon}
+                  className="size-4 text-primary-foreground"
+                  size={16}
+                />
+                <Text className="font-semibold text-primary-foreground">
+                  {isTesting ? "Testing Connection..." : "Save"}
+                </Text>
+              </Button>
+            </View>
+          )}
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* ── Save Result Alert ───────────────────────────────── */}
       <AlertDialog

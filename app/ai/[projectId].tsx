@@ -415,7 +415,8 @@ export default function AiScreen() {
       />
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior="padding"
+        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 80}
         className="flex-1 bg-background"
         style={{ paddingBottom: Math.max(insets.bottom, 16) }}>
         {aiConfigured === false ? (
