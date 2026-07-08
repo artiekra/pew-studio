@@ -209,7 +209,7 @@ export function ProjectListScreen() {
               </View>
             </Pressable>
 
-            <Pressable
+            {/* <Pressable
               className="flex-row items-center gap-4 rounded-xl border border-border bg-secondary/50 p-4 active:opacity-80"
               onPress={() => {}}>
               <View className="h-12 w-12 items-center justify-center rounded-full bg-primary/10">
@@ -221,7 +221,7 @@ export function ProjectListScreen() {
                   Browse open-source projects
                 </Text>
               </View>
-            </Pressable>
+            </Pressable> */}
 
             <View className="mt-2 flex-row justify-end">
               <Button variant="ghost" onPress={() => setActionModalVisible(false)}>
