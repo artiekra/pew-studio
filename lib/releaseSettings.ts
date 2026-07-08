@@ -1,4 +1,5 @@
 import * as FileSystem from "expo-file-system/legacy";
+import { getValidSession, clearSession } from "./pewpewAccount";
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -40,14 +41,16 @@ export async function isReleaseConfigured(): Promise<boolean> {
 }
 
 export async function testReleaseConnection(email: string, password?: string): Promise<{ success: boolean; message?: string }> {
-  // Stub for now. We will implement that later.
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      if (!email || !password) {
-        resolve({ success: false, message: "Email and password are required." });
-      } else {
-        resolve({ success: true });
-      }
-    }, 1000);
-  });
+  if (!email || !password) {
+    return { success: false, message: "Email and password are required." };
+  }
+
+  try {
+    // Clear any existing session to ensure we are testing these exact credentials
+    await clearSession();
+    await getValidSession(email, password);
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, message: err.message || "Failed to connect to PewPewLive." };
+  }
 }
