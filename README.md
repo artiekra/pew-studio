@@ -8,7 +8,7 @@ Open-source mobile code editor for PewPew Live levels
 - Use AI Assistant that can read and edit files
 - Export level or publish to the game directly
 
-![app preview](https://raw.githubusercontent.com/artiekra/pew-studio/refs/heads/main/preview.jpg)
+![app preview](https://raw.githubusercontent.com/artiekra/pew-studio/refs/heads/main/preview.png)
 
 ## Contributing
 
