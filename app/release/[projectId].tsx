@@ -19,7 +19,6 @@ import {
   UploadIcon,
   ExternalLinkIcon,
   BookOpenIcon,
-  InfoIcon,
 } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getProjects } from "@/services/projectRepository";
@@ -32,7 +31,11 @@ export default function ReleaseScreen() {
   const insets = useSafeAreaInsets();
   const [project, setProject] = useState<Project | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadResult, setUploadResult] = useState<{ status: "success" | "error"; message: string } | null>(null);
+  const [uploadResult, setUploadResult] = useState<{
+    status: "success" | "error";
+    message: string;
+  } | null>(null);
+  const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -71,20 +74,24 @@ export default function ReleaseScreen() {
       <View className="flex-1 bg-background p-6">
         <View className="flex-1 gap-6">
           {/* Info text (boilerplate) */}
-          <View className="flex-row items-center gap-3 rounded-xl border border-blue-500/20 bg-blue-500/10 p-4">
-            <Icon as={InfoIcon} className="size-5 text-blue-500" size={20} />
-            <Text className="flex-1 text-sm text-blue-500 dark:text-blue-400">
-              Upload your level to PewPew Live so other players can discover and play it.
-            </Text>
-          </View>
+          <Text className="px-4 text-base text-muted-foreground">
+            Upload your level to PewPew Live so other players can discover and play it.
+          </Text>
+          <Text className="px-4 text-base text-muted-foreground">
+            Your level will initially be private (only visible to you) - it can be played in the
+            game's "experimental" tab.
+          </Text>
+          <Text className="px-4 text-base text-muted-foreground">
+            Log into the website to manage your levels (delete, request a review and check their
+            status). If you want to update your level within this app, upload it again and delete
+            the old version.
+          </Text>
 
           {/* Level uploading rules */}
           <Button
             variant="outline"
             className="flex-row items-center justify-center gap-2"
-            onPress={() => {
-              // TODO: open level uploading rules
-            }}>
+            onPress={() => setIsRulesModalOpen(true)}>
             <Icon as={BookOpenIcon} className="size-4 text-foreground" size={16} />
             <Text className="font-semibold text-foreground">Level Uploading Rules</Text>
           </Button>
@@ -110,7 +117,9 @@ export default function ReleaseScreen() {
             className="flex-row items-center justify-center gap-2"
             onPress={() => Linking.openURL("https://pewpew.live/account/custom-levels")}>
             <Icon as={ExternalLinkIcon} className="size-4 text-secondary-foreground" size={16} />
-            <Text className="font-semibold text-secondary-foreground">My Levels on PewPew Live</Text>
+            <Text className="font-semibold text-secondary-foreground">
+              My Levels on PewPew Live
+            </Text>
           </Button>
         </View>
       </View>
@@ -124,7 +133,9 @@ export default function ReleaseScreen() {
         <AlertDialogContent>
           <AlertDialogHeader className="items-center sm:items-center">
             <AlertDialogTitle
-              className={uploadResult?.status === "success" ? "text-green-500" : "text-destructive"}>
+              className={
+                uploadResult?.status === "success" ? "text-green-500" : "text-destructive"
+              }>
               {uploadResult?.status === "success" ? "Upload Successful" : "Upload Failed"}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-center">
@@ -142,6 +153,27 @@ export default function ReleaseScreen() {
               <Text className={uploadResult?.status === "success" ? "text-white" : ""}>
                 Dismiss
               </Text>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ── Rules Modal ───────────────────────────────────────── */}
+      <AlertDialog open={isRulesModalOpen} onOpenChange={setIsRulesModalOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Level Uploading Rules</AlertDialogTitle>
+            <AlertDialogDescription>
+              You may not upload content that: is racist, discriminatory, defamatory of any person,
+              obscene, offensive, pornographic, hateful or inflammatory; infringes any copyright,
+              trademark or other intellectual property; is malicious or technologically harmful. By
+              uploading content, you accept licensing the uploaded content under the MIT License. A
+              level cannot have more than 500 files.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onPress={() => setIsRulesModalOpen(false)}>
+              <Text>Close</Text>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
