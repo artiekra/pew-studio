@@ -1,4 +1,5 @@
 import * as FileSystem from "expo-file-system/legacy";
+import { Platform } from "react-native";
 import { getProjectDir } from "./fileIO";
 import { getValidSession, getStoredSession } from "@/lib/pewpewAccount";
 import { getReleaseSettings } from "@/lib/releaseSettings";
@@ -94,41 +95,25 @@ export async function uploadLevel(projectId: string, projectName: string): Promi
       return { success: false, message: "Project has no files to upload." };
     }
 
-    // Build a multipart/form-data body manually since React Native's
-    // FormData doesn't support setting the webkitRelativePath.
-    const boundary = `----pewpewstudio${Date.now()}${Math.random().toString(36).slice(2)}`;
-    const parts: string[] = [];
+    const formData = new FormData();
 
     for (const file of files) {
+      // PewPewLive backend explicitly expects file contents as regular text form fields,
+      // where the field name is the file path. It ignores fields that have a `filename` attribute!
       const content = await FileSystem.readAsStringAsync(file.uri, {
-        encoding: FileSystem.EncodingType.Base64,
+        encoding: FileSystem.EncodingType.UTF8,
       });
-
-      parts.push(`--${boundary}`);
-      parts.push(
-        `Content-Disposition: form-data; name="files"; filename="${file.relativePath}"`
-      );
-      parts.push("Content-Transfer-Encoding: base64");
-
-      // Guess a reasonable content-type
-      const ext = file.relativePath.split(".").pop()?.toLowerCase() ?? "";
-      const mimeType = getMimeType(ext);
-      parts.push(`Content-Type: ${mimeType}`);
-      parts.push("");
-      parts.push(content);
+      formData.append(file.relativePath, content);
     }
 
-    parts.push(`--${boundary}--`);
-    const body = parts.join("\r\n");
-
     const headers = await getAuthHeaders();
-    headers["Content-Type"] = `multipart/form-data; boundary=${boundary}`;
+    // Do NOT set Content-Type manually, let fetch set it with the correct boundary for FormData
     headers["Accept"] = "*/*";
 
     const res = await fetch("https://pewpew.live/account/upload-level", {
       method: "POST",
       headers,
-      body,
+      body: formData,
     });
 
     const text = await res.text();
@@ -165,21 +150,4 @@ export async function uploadLevel(projectId: string, projectName: string): Promi
   }
 }
 
-// ── Mime helpers ──────────────────────────────────────────────────────
 
-function getMimeType(ext: string): string {
-  const map: Record<string, string> = {
-    lua: "text/x-lua",
-    json: "application/json",
-    txt: "text/plain",
-    png: "image/png",
-    jpg: "image/jpeg",
-    jpeg: "image/jpeg",
-    gif: "image/gif",
-    svg: "image/svg+xml",
-    wav: "audio/wav",
-    mp3: "audio/mpeg",
-    ogg: "audio/ogg",
-  };
-  return map[ext] || "application/octet-stream";
-}
