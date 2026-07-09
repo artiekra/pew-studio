@@ -10,16 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+
 import {
   CopyIcon,
   DownloadIcon,
@@ -339,29 +330,33 @@ export function ProjectListScreen() {
         </Pressable>
       </Modal>
 
-      {/* ── Delete-project alert dialog ───────────────────────────── */}
-      <AlertDialog
-        open={!!projectToDelete}
-        onOpenChange={(open) => {
-          if (!open) setProjectToDelete(null);
-        }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Project</AlertDialogTitle>
-            <AlertDialogDescription>
+      {/* ── Delete-project modal ─────────────────────────────────── */}
+      <Modal
+        visible={!!projectToDelete}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setProjectToDelete(null)}>
+        <Pressable
+          className="flex-1 items-center justify-center bg-black/50 p-6"
+          onPress={() => setProjectToDelete(null)}>
+          <Pressable
+            className="w-full max-w-sm gap-4 rounded-2xl border border-border bg-card p-6"
+            onPress={() => {}}>
+            <Text className="text-xl font-semibold text-foreground">Delete Project</Text>
+            <Text className="text-base text-muted-foreground">
               Are you sure you want to delete "{projectToDelete?.name}"? This cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>
-              <Text>Cancel</Text>
-            </AlertDialogCancel>
-            <AlertDialogAction className="bg-destructive" onPress={confirmDelete}>
-              <Text>Delete</Text>
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Text>
+            <View className="mt-2 flex-row justify-end gap-3">
+              <Button variant="ghost" onPress={() => setProjectToDelete(null)}>
+                <Text>Cancel</Text>
+              </Button>
+              <Button variant="destructive" onPress={confirmDelete}>
+                <Text>Delete</Text>
+              </Button>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </>
   );
 }
