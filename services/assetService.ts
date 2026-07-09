@@ -17,7 +17,9 @@ export async function ensureAssetsAreCopied(
 
   if (template === "pseudo-infinity") {
     const manifestData = require("../assets/project-templates/pseudo-infinity/manifest.json");
-    const levelAsset = Asset.fromModule(require("../assets/project-templates/pseudo-infinity/level.lua"));
+    const levelAsset = Asset.fromModule(
+      require("../assets/project-templates/pseudo-infinity/level.lua")
+    );
 
     await levelAsset.downloadAsync();
 
@@ -34,8 +36,12 @@ export async function ensureAssetsAreCopied(
   } else {
     // Default to basic
     const manifestData = require("../assets/project-templates/basic-level/manifest.json");
-    const levelAsset = Asset.fromModule(require("../assets/project-templates/basic-level/level.lua"));
-    const meshAsset = Asset.fromModule(require("../assets/project-templates/basic-level/background_mesh.lua"));
+    const levelAsset = Asset.fromModule(
+      require("../assets/project-templates/basic-level/level.lua")
+    );
+    const meshAsset = Asset.fromModule(
+      require("../assets/project-templates/basic-level/background_mesh.lua")
+    );
 
     await Promise.all([levelAsset.downloadAsync(), meshAsset.downloadAsync()]);
 

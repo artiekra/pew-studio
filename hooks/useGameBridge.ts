@@ -221,12 +221,15 @@ export function useGameBridge(projectId: string | undefined) {
       if (data.type === "error") {
         setLevelError(data.message);
       } else if (data.type === "console_log") {
-        setLogs(prev => [...prev, {
-          id: Math.random().toString(),
-          level: data.level,
-          message: data.message,
-          timestamp: Date.now()
-        }]);
+        setLogs((prev) => [
+          ...prev,
+          {
+            id: Math.random().toString(),
+            level: data.level,
+            message: data.message,
+            timestamp: Date.now(),
+          },
+        ]);
       } else if (data.type === "fetch") {
         const { requestId, url } = data;
 

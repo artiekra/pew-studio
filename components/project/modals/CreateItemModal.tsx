@@ -21,7 +21,7 @@ export function CreateItemModal() {
   const handleCreate = async () => {
     const trimmed = inputValue.trim();
     if (!trimmed) return;
-    
+
     if (itemType === "folder") {
       await createFolder(parentPath, trimmed);
     } else {
@@ -36,8 +36,12 @@ export function CreateItemModal() {
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleCancel}>
-      <Pressable className="flex-1 items-center justify-center bg-black/50 p-6" onPress={handleCancel}>
-        <Pressable className="w-full max-w-sm gap-4 rounded-2xl border border-border bg-card p-6" onPress={() => {}}>
+      <Pressable
+        className="flex-1 items-center justify-center bg-black/50 p-6"
+        onPress={handleCancel}>
+        <Pressable
+          className="w-full max-w-sm gap-4 rounded-2xl border border-border bg-card p-6"
+          onPress={() => {}}>
           <Text className="text-xl font-semibold text-foreground">
             New {itemType === "folder" ? "Folder" : "File"}
           </Text>

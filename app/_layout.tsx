@@ -6,7 +6,7 @@ import { PortalHost } from "@rn-primitives/portal";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useColorScheme } from "nativewind";
-import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
+import { configureReanimatedLogger, ReanimatedLogLevel } from "react-native-reanimated";
 
 configureReanimatedLogger({
   level: ReanimatedLogLevel.warn,

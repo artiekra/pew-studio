@@ -1,5 +1,13 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { View, TextInput, Alert, Image, KeyboardAvoidingView, ScrollView, Platform } from "react-native";
+import {
+  View,
+  TextInput,
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
+} from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { Pressable } from "react-native";
 import { Text } from "@/components/ui/text";
@@ -44,13 +52,39 @@ import { getAiSettings, saveAiSettings, testAiConnection, type AiSettings } from
 
 const AI_PROVIDERS = [
   { label: "OpenAI", value: "openai", url: "https://api.openai.com/v1", domain: "openai.com" },
-  { label: "Anthropic", value: "anthropic", url: "https://api.anthropic.com/v1", domain: "anthropic.com" },
-  { label: "Google Gemini", value: "gemini", url: "https://generativelanguage.googleapis.com", domain: "gemini.google.com" },
+  {
+    label: "Anthropic",
+    value: "anthropic",
+    url: "https://api.anthropic.com/v1",
+    domain: "anthropic.com",
+  },
+  {
+    label: "Google Gemini",
+    value: "gemini",
+    url: "https://generativelanguage.googleapis.com",
+    domain: "gemini.google.com",
+  },
   { label: "Mistral AI", value: "mistral", url: "https://api.mistral.ai/v1", domain: "mistral.ai" },
-  { label: "OpenRouter", value: "openrouter", url: "https://openrouter.ai/api/v1", domain: "openrouter.ai" },
+  {
+    label: "OpenRouter",
+    value: "openrouter",
+    url: "https://openrouter.ai/api/v1",
+    domain: "openrouter.ai",
+  },
   { label: "Groq", value: "groq", url: "https://api.groq.com/openai/v1", domain: "groq.com" },
-  { label: "DeepSeek", value: "deepseek", url: "https://api.deepseek.com/v1", domain: "deepseek.com" },
-  { label: "Custom", value: "custom", url: "", icon: Settings2Icon, color: "text-muted-foreground" },
+  {
+    label: "DeepSeek",
+    value: "deepseek",
+    url: "https://api.deepseek.com/v1",
+    domain: "deepseek.com",
+  },
+  {
+    label: "Custom",
+    value: "custom",
+    url: "",
+    icon: Settings2Icon,
+    color: "text-muted-foreground",
+  },
 ];
 
 export default function AiSettingsScreen() {
@@ -61,7 +95,10 @@ export default function AiSettingsScreen() {
   const [apiUrl, setApiUrl] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [loading, setLoading] = useState(true);
-  const [saveStatus, setSaveStatus] = useState<{ status: "success" | "error"; message: string } | null>(null);
+  const [saveStatus, setSaveStatus] = useState<{
+    status: "success" | "error";
+    message: string;
+  } | null>(null);
   const [isTesting, setIsTesting] = useState(false);
 
   useEffect(() => {
@@ -87,11 +124,11 @@ export default function AiSettingsScreen() {
         setSaveStatus({ status: "error", message: "Please enter an API key." });
         return;
       }
-      
+
       setIsTesting(true);
       const testResult = await testAiConnection(apiUrl.trim(), apiKey.trim(), provider);
       setIsTesting(false);
-      
+
       if (!testResult.success) {
         setSaveStatus({ status: "error", message: "Connection failed: " + testResult.message });
         return;
@@ -171,12 +208,16 @@ export default function AiSettingsScreen() {
                       <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-70">
                         <View className="flex-row items-center gap-2">
                           {(() => {
-                            const p = AI_PROVIDERS.find((p) => p.value === provider) || AI_PROVIDERS[AI_PROVIDERS.length - 1];
+                            const p =
+                              AI_PROVIDERS.find((p) => p.value === provider) ||
+                              AI_PROVIDERS[AI_PROVIDERS.length - 1];
                             return (
                               <>
                                 {p.domain ? (
                                   <Image
-                                    source={{ uri: `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://${p.domain}&size=64` }}
+                                    source={{
+                                      uri: `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://${p.domain}&size=64`,
+                                    }}
                                     style={{ width: 16, height: 16, borderRadius: 4 }}
                                   />
                                 ) : (
@@ -187,7 +228,11 @@ export default function AiSettingsScreen() {
                             );
                           })()}
                         </View>
-                        <Icon as={ChevronDownIcon} className="size-4 text-muted-foreground" size={16} />
+                        <Icon
+                          as={ChevronDownIcon}
+                          className="size-4 text-muted-foreground"
+                          size={16}
+                        />
                       </Pressable>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start" className="w-64 p-1">
@@ -202,7 +247,9 @@ export default function AiSettingsScreen() {
                           }}>
                           {p.domain ? (
                             <Image
-                              source={{ uri: `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://${p.domain}&size=64` }}
+                              source={{
+                                uri: `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://${p.domain}&size=64`,
+                              }}
                               style={{ width: 16, height: 16, borderRadius: 4, marginRight: 8 }}
                             />
                           ) : (
@@ -223,7 +270,9 @@ export default function AiSettingsScreen() {
                   </View>
                   <TextInput
                     className={`rounded-xl border border-border px-4 py-3 text-base ${
-                      provider !== "custom" ? "bg-muted text-muted-foreground opacity-70" : "bg-card text-foreground"
+                      provider !== "custom"
+                        ? "bg-muted text-muted-foreground opacity-70"
+                        : "bg-card text-foreground"
                     }`}
                     placeholder="https://api.example.com/v1/chat"
                     placeholderTextColor="hsl(0 0% 45%)"
@@ -260,7 +309,10 @@ export default function AiSettingsScreen() {
           {/* Save button */}
           {enabled && (
             <View style={{ paddingTop: 24, paddingBottom: Math.max(insets.bottom, 16) }}>
-              <Button className="flex-row items-center justify-center gap-2" onPress={handleSave} disabled={isTesting}>
+              <Button
+                className="flex-row items-center justify-center gap-2"
+                onPress={handleSave}
+                disabled={isTesting}>
                 <Icon
                   as={isTesting ? ServerIcon : SaveIcon}
                   className="size-4 text-primary-foreground"
@@ -274,7 +326,7 @@ export default function AiSettingsScreen() {
           )}
         </ScrollView>
       </KeyboardAvoidingView>
-      
+
       {/* ── Save Result Alert ───────────────────────────────── */}
       <AlertDialog
         open={saveStatus !== null}
@@ -299,9 +351,7 @@ export default function AiSettingsScreen() {
                   : ""
               }
               onPress={() => setSaveStatus(null)}>
-              <Text className={saveStatus?.status === "success" ? "text-white" : ""}>
-                Dismiss
-              </Text>
+              <Text className={saveStatus?.status === "success" ? "text-white" : ""}>Dismiss</Text>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

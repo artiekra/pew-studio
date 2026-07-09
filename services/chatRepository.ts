@@ -67,14 +67,17 @@ export async function addMessageToChat(
 
   chats[chatIndex].messages.push(newMessage);
   chats[chatIndex].updatedAt = now;
-  
+
   await saveProjectChats(projectId, chats);
   return chats[chatIndex];
 }
 
 export async function deleteChat(projectId: string, chatId: string): Promise<void> {
   const chats = await getProjectChats(projectId);
-  await saveProjectChats(projectId, chats.filter((c) => c.id !== chatId));
+  await saveProjectChats(
+    projectId,
+    chats.filter((c) => c.id !== chatId)
+  );
 }
 
 export async function updateChat(projectId: string, updatedChat: Chat): Promise<void> {

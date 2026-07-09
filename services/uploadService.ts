@@ -33,8 +33,8 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
   const session = await getStoredSession();
   const headers: Record<string, string> = {
     "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:152.0) Gecko/20100101 Firefox/152.0",
-    "Origin": "https://pewpew.live",
-    "Referer": "https://pewpew.live/account/custom-levels",
+    Origin: "https://pewpew.live",
+    Referer: "https://pewpew.live/account/custom-levels",
   };
   if (session && session !== "OS_MANAGED_COOKIE") {
     headers["Cookie"] = `session=${session}`;
@@ -87,7 +87,7 @@ export async function uploadLevel(projectId: string, projectName: string): Promi
     await ensureSession();
 
     const projectDir = getProjectDir(projectId);
-    
+
     // Use the project name as the root folder name to simulate a folder upload
     const files = await collectFiles(projectDir, projectName);
 
@@ -117,7 +117,7 @@ export async function uploadLevel(projectId: string, projectName: string): Promi
     });
 
     const text = await res.text();
-    
+
     // Check if the response is JSON
     try {
       const json = JSON.parse(text);
@@ -128,7 +128,7 @@ export async function uploadLevel(projectId: string, projectName: string): Promi
         };
       }
       if (json && json.success === true) {
-         return { success: true, message: "Level uploaded successfully!" };
+        return { success: true, message: "Level uploaded successfully!" };
       }
     } catch (e) {
       // Not JSON, continue to other checks
@@ -149,5 +149,3 @@ export async function uploadLevel(projectId: string, projectName: string): Promi
     };
   }
 }
-
-

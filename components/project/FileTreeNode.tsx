@@ -156,11 +156,17 @@ export function FileTreeNode({
             <DropdownMenuContent align="end" className="w-48">
               {isFolder && (
                 <>
-                  <DropdownMenuItem onPress={() => dispatch({ type: "START_CREATE", itemType: "file", parentPath: node.id })}>
+                  <DropdownMenuItem
+                    onPress={() =>
+                      dispatch({ type: "START_CREATE", itemType: "file", parentPath: node.id })
+                    }>
                     <Icon as={FilePlusIcon} className="size-4 text-muted-foreground" size={16} />
                     <Text>New file</Text>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onPress={() => dispatch({ type: "START_CREATE", itemType: "folder", parentPath: node.id })}>
+                  <DropdownMenuItem
+                    onPress={() =>
+                      dispatch({ type: "START_CREATE", itemType: "folder", parentPath: node.id })
+                    }>
                     <Icon as={FolderPlusIcon} className="size-4 text-muted-foreground" size={16} />
                     <Text>New folder</Text>
                   </DropdownMenuItem>
@@ -176,7 +182,9 @@ export function FileTreeNode({
                 <Text>Move to…</Text>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem variant="destructive" onPress={() => dispatch({ type: "START_DELETE", node })}>
+              <DropdownMenuItem
+                variant="destructive"
+                onPress={() => dispatch({ type: "START_DELETE", node })}>
                 <Icon as={Trash2Icon} className="size-4 text-destructive" size={16} />
                 <Text>Delete</Text>
               </DropdownMenuItem>

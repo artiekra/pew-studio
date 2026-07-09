@@ -3,7 +3,24 @@ import { EditorView } from "@codemirror/view";
 import { Compartment } from "@codemirror/state";
 import { basicDark } from "@fsegurai/codemirror-theme-basic-dark";
 import { basicLight } from "@fsegurai/codemirror-theme-basic-light";
-import { amy, ayuLight, barf, bespin, birdsOfParadise, boysAndGirls, clouds, cobalt, coolGlow, dracula, espresso, noctisLilac, rosePineDawn, smoothy, solarizedLight, tomorrow } from "thememirror";
+import {
+  amy,
+  ayuLight,
+  barf,
+  bespin,
+  birdsOfParadise,
+  boysAndGirls,
+  clouds,
+  cobalt,
+  coolGlow,
+  dracula,
+  espresso,
+  noctisLilac,
+  rosePineDawn,
+  smoothy,
+  solarizedLight,
+  tomorrow,
+} from "thememirror";
 import { json } from "@codemirror/lang-json";
 import { StreamLanguage } from "@codemirror/language";
 import { lua } from "@codemirror/legacy-modes/mode/lua";

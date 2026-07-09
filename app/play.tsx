@@ -12,10 +12,10 @@ export default function PlayScreen() {
   const { projectId } = useLocalSearchParams<{ projectId: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  
+
   const [activeTab, setActiveTab] = useState<"game" | "console">("game");
   const { width, height } = useWindowDimensions();
-  
+
   // Ensure we get the landscape dimensions regardless of current physical orientation
   const landscapeWidth = Math.max(width, height);
   const landscapeHeight = Math.min(width, height);
@@ -116,7 +116,7 @@ export default function PlayScreen() {
                 {logs.length === 0 ? (
                   <Text className="mt-4 text-center text-muted-foreground">No logs yet...</Text>
                 ) : (
-                  logs.map(log => (
+                  logs.map((log) => (
                     <View key={log.id} className="mb-1">
                       <Text
                         className={`font-mono text-sm ${

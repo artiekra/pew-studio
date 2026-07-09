@@ -21,7 +21,8 @@ export function useEditorBridge(projectId: string | undefined, fileId: string | 
     }, [])
   );
 
-  const finalTheme = editorThemeSetting === "system" ? (colorScheme ?? "light") : editorThemeSetting;
+  const finalTheme =
+    editorThemeSetting === "system" ? (colorScheme ?? "light") : editorThemeSetting;
 
   const fileExtension = fileId?.split(".").pop();
   const language = fileExtension === "json" ? "json" : fileExtension === "lua" ? "lua" : "";

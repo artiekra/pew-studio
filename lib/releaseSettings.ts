@@ -40,7 +40,10 @@ export async function isReleaseConfigured(): Promise<boolean> {
   return settings !== null && settings.enabled && !!settings.email && !!settings.password;
 }
 
-export async function testReleaseConnection(email: string, password?: string): Promise<{ success: boolean; message?: string }> {
+export async function testReleaseConnection(
+  email: string,
+  password?: string
+): Promise<{ success: boolean; message?: string }> {
   if (!email || !password) {
     return { success: false, message: "Email and password are required." };
   }

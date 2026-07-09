@@ -27,22 +27,22 @@ export async function clearSession(): Promise<void> {
 
 export async function login(email: string, password: string): Promise<string> {
   const body = `email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
-  
+
   const res = await fetch("https://pewpew.live/account", {
     method: "POST",
     headers: {
       "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:152.0) Gecko/20100101 Firefox/152.0",
-      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
       "Content-Type": "application/x-www-form-urlencoded",
-      "Origin": "https://pewpew.live",
-      "Referer": "https://pewpew.live/account",
+      Origin: "https://pewpew.live",
+      Referer: "https://pewpew.live/account",
     },
     body,
     redirect: "manual",
   });
 
   const setCookie = res.headers.get("set-cookie") || res.headers.get("Set-Cookie");
-  
+
   if (setCookie) {
     const sessionMatch = setCookie.match(/session=([^;]+)/);
     if (sessionMatch && sessionMatch[1]) {
@@ -58,9 +58,9 @@ export async function login(email: string, password: string): Promise<string> {
   const verifyRes = await fetch("https://pewpew.live/account", {
     headers: {
       "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:152.0) Gecko/20100101 Firefox/152.0",
-    }
+    },
   });
-  
+
   const verifyText = await verifyRes.text();
   if (verifyText.includes('class="info-title">SIGN IN</h1>')) {
     throw new Error("Invalid email or password.");
@@ -77,14 +77,14 @@ export async function checkSessionValid(session: string): Promise<boolean> {
     const headers: Record<string, string> = {
       "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:152.0) Gecko/20100101 Firefox/152.0",
     };
-    
+
     if (session !== "OS_MANAGED_COOKIE") {
       headers["Cookie"] = `session=${session}`;
     }
 
     const res = await fetch("https://pewpew.live/account", { headers });
     const text = await res.text();
-    
+
     // If the account page still shows the sign in form, the session is invalid
     if (text.includes('class="info-title">SIGN IN</h1>')) {
       return false;
@@ -97,7 +97,7 @@ export async function checkSessionValid(session: string): Promise<boolean> {
 
 export async function getValidSession(email?: string, password?: string): Promise<string> {
   const currentSession = await getStoredSession();
-  
+
   if (currentSession) {
     const isValid = await checkSessionValid(currentSession);
     if (isValid) {

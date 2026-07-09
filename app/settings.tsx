@@ -1,7 +1,15 @@
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { Stack, useRouter } from "expo-router";
-import { MoonStarIcon, SunIcon, SparklesIcon, ChevronRightIcon, PaletteIcon, InfoIcon, RocketIcon } from "lucide-react-native";
+import {
+  MoonStarIcon,
+  SunIcon,
+  SparklesIcon,
+  ChevronRightIcon,
+  PaletteIcon,
+  InfoIcon,
+  RocketIcon,
+} from "lucide-react-native";
 import { useColorScheme } from "nativewind";
 import * as React from "react";
 import { View, Pressable } from "react-native";
@@ -20,10 +28,12 @@ function ThemeToggle() {
       className="flex-row items-center justify-between rounded-xl border border-border bg-card p-4 active:opacity-70">
       <Text className="text-base font-medium text-foreground">Theme</Text>
       <View className="flex-row items-center gap-2">
-        <Text className="text-base text-muted-foreground">
-          {colorScheme ?? "light"}
-        </Text>
-        <Icon as={THEME_ICONS[colorScheme ?? "light"]} className="size-5 text-foreground" size={20} />
+        <Text className="text-base text-muted-foreground">{colorScheme ?? "light"}</Text>
+        <Icon
+          as={THEME_ICONS[colorScheme ?? "light"]}
+          className="size-5 text-foreground"
+          size={20}
+        />
       </View>
     </Pressable>
   );

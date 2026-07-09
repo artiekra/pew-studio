@@ -154,203 +154,207 @@ export default function ProjectScreen() {
         }}
       />
 
-      <ExplorerContext.Provider value={{ state, dispatch, createFolder, createFile, rename, move, remove, fileTree }}>
-      <View className="flex-1 bg-background" {...panResponder.panHandlers}>
-        {/* ── File tree ─────────────────────────────────────────── */}
-        <ScrollView
-          className="flex-1 p-4"
-          ref={treeContainerRef as any}
-          onLayout={onTreeLayout}
-          onScroll={onScroll}
-          scrollEventThrottle={16}>
-          <View className="mb-2 flex-row gap-2">
-            <Pressable
-              className="flex-row items-center gap-2 rounded-lg px-3 py-2 active:opacity-70"
-              onPress={() => dispatch({ type: "START_CREATE", itemType: "file", parentPath: null })}>
-              <Icon as={FilePlusIcon} className="size-4 text-muted-foreground" size={16} />
-              <Text className="text-sm text-muted-foreground">New file</Text>
-            </Pressable>
-            <Pressable
-              className="flex-row items-center gap-2 rounded-lg px-3 py-2 active:opacity-70"
-              onPress={() => dispatch({ type: "START_CREATE", itemType: "folder", parentPath: null })}>
-              <Icon as={FolderPlusIcon} className="size-4 text-muted-foreground" size={16} />
-              <Text className="text-sm text-muted-foreground">New folder</Text>
-            </Pressable>
-          </View>
-
-          <DragContext.Provider
-            value={{
-              draggedNodeId: draggedNode?.id ?? null,
-              dropTargetId,
-              registerLayout,
-              startDrag,
-            }}>
-            {fileTree.map((node) => (
-              <FileTreeNode
-                key={node.id}
-                node={node}
-                depth={0}
-                expandedFolders={expandedFolders}
-                onToggle={toggleFolder}
-                onOpenFile={handleOpenFile}
-              />
-            ))}
-          </DragContext.Provider>
-
-          {/* ── Root drop zone ──────────────────────────────────── */}
-          {draggedNode && (
-            <View
-              className={`mt-1 rounded-lg border-2 border-dashed px-4 py-4 ${
-                dropTargetId === null ? "border-primary bg-primary/10" : "border-transparent"
-              }`}>
-              <Text
-                className={`text-center text-sm ${
-                  dropTargetId === null ? "text-primary" : "text-muted-foreground/50"
-                }`}>
-                Drop here to move to root
-              </Text>
+      <ExplorerContext.Provider
+        value={{ state, dispatch, createFolder, createFile, rename, move, remove, fileTree }}>
+        <View className="flex-1 bg-background" {...panResponder.panHandlers}>
+          {/* ── File tree ─────────────────────────────────────────── */}
+          <ScrollView
+            className="flex-1 p-4"
+            ref={treeContainerRef as any}
+            onLayout={onTreeLayout}
+            onScroll={onScroll}
+            scrollEventThrottle={16}>
+            <View className="mb-2 flex-row gap-2">
+              <Pressable
+                className="flex-row items-center gap-2 rounded-lg px-3 py-2 active:opacity-70"
+                onPress={() =>
+                  dispatch({ type: "START_CREATE", itemType: "file", parentPath: null })
+                }>
+                <Icon as={FilePlusIcon} className="size-4 text-muted-foreground" size={16} />
+                <Text className="text-sm text-muted-foreground">New file</Text>
+              </Pressable>
+              <Pressable
+                className="flex-row items-center gap-2 rounded-lg px-3 py-2 active:opacity-70"
+                onPress={() =>
+                  dispatch({ type: "START_CREATE", itemType: "folder", parentPath: null })
+                }>
+                <Icon as={FolderPlusIcon} className="size-4 text-muted-foreground" size={16} />
+                <Text className="text-sm text-muted-foreground">New folder</Text>
+              </Pressable>
             </View>
-          )}
-        </ScrollView>
 
-        {/* ── Bottom action bar ─────────────────────────────────── */}
-        <View
-          className="border-t border-border bg-card px-4 pt-4"
-          style={{ paddingBottom: Math.max(insets.bottom, 16) }}>
-          <View className="flex-row gap-3">
-            <Button
-              className="flex-1 flex-row items-center justify-center gap-2"
-              onPress={() => router.push({ pathname: "/play", params: { projectId: id } })}>
-              <Icon as={PlayIcon} className="size-4 text-primary-foreground" size={16} />
-              <Text className="font-semibold text-primary-foreground">Play</Text>
-            </Button>
-            <Button
-              variant="secondary"
-              className="flex-1 flex-row items-center justify-center gap-2"
-              onPress={async () => {
-                const configured = await isReleaseConfigured();
-                if (!configured) {
-                  setReleasePromptVisible(true);
-                } else {
-                  router.push({ pathname: "/release/[projectId]", params: { projectId: id } });
-                }
+            <DragContext.Provider
+              value={{
+                draggedNodeId: draggedNode?.id ?? null,
+                dropTargetId,
+                registerLayout,
+                startDrag,
               }}>
-              <Icon as={RocketIcon} className="size-4 text-secondary-foreground" size={16} />
-              <Text className="font-semibold text-secondary-foreground">Release</Text>
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-1 flex-row items-center justify-center gap-2"
-              onPress={async () => {
-                try {
-                  const exported = await exportProjectAsZip(id, project.name);
-                  if (exported) {
+              {fileTree.map((node) => (
+                <FileTreeNode
+                  key={node.id}
+                  node={node}
+                  depth={0}
+                  expandedFolders={expandedFolders}
+                  onToggle={toggleFolder}
+                  onOpenFile={handleOpenFile}
+                />
+              ))}
+            </DragContext.Provider>
+
+            {/* ── Root drop zone ──────────────────────────────────── */}
+            {draggedNode && (
+              <View
+                className={`mt-1 rounded-lg border-2 border-dashed px-4 py-4 ${
+                  dropTargetId === null ? "border-primary bg-primary/10" : "border-transparent"
+                }`}>
+                <Text
+                  className={`text-center text-sm ${
+                    dropTargetId === null ? "text-primary" : "text-muted-foreground/50"
+                  }`}>
+                  Drop here to move to root
+                </Text>
+              </View>
+            )}
+          </ScrollView>
+
+          {/* ── Bottom action bar ─────────────────────────────────── */}
+          <View
+            className="border-t border-border bg-card px-4 pt-4"
+            style={{ paddingBottom: Math.max(insets.bottom, 16) }}>
+            <View className="flex-row gap-3">
+              <Button
+                className="flex-1 flex-row items-center justify-center gap-2"
+                onPress={() => router.push({ pathname: "/play", params: { projectId: id } })}>
+                <Icon as={PlayIcon} className="size-4 text-primary-foreground" size={16} />
+                <Text className="font-semibold text-primary-foreground">Play</Text>
+              </Button>
+              <Button
+                variant="secondary"
+                className="flex-1 flex-row items-center justify-center gap-2"
+                onPress={async () => {
+                  const configured = await isReleaseConfigured();
+                  if (!configured) {
+                    setReleasePromptVisible(true);
+                  } else {
+                    router.push({ pathname: "/release/[projectId]", params: { projectId: id } });
+                  }
+                }}>
+                <Icon as={RocketIcon} className="size-4 text-secondary-foreground" size={16} />
+                <Text className="font-semibold text-secondary-foreground">Release</Text>
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1 flex-row items-center justify-center gap-2"
+                onPress={async () => {
+                  try {
+                    const exported = await exportProjectAsZip(id, project.name);
+                    if (exported) {
+                      setExportStatus({
+                        status: "success",
+                        message: "Your level has been successfully exported.",
+                      });
+                    }
+                  } catch (err) {
                     setExportStatus({
-                      status: "success",
-                      message: "Your level has been successfully exported.",
+                      status: "error",
+                      message: String(err),
                     });
                   }
-                } catch (err) {
-                  setExportStatus({
-                    status: "error",
-                    message: String(err),
-                  });
-                }
-              }}>
-              <Icon as={PackageIcon} className="size-4 text-foreground" size={16} />
-              <Text className="font-semibold text-foreground">Export</Text>
-            </Button>
-          </View>
-        </View>
-
-        {/* ── Drag preview overlay ──────────────────────────────── */}
-        <Animated.View style={dragPreviewStyle} pointerEvents="none">
-          <View className="flex-row items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-lg shadow-black/20">
-            <Icon
-              as={draggedNode?.type === "folder" ? FolderIcon : FileIcon}
-              className="size-5 text-primary"
-              size={20}
-            />
-            <View className="flex-1">
-              <Text className="text-base font-medium text-foreground" numberOfLines={1}>
-                {draggedNode?.name}
-              </Text>
-              {dropLabel ? (
-                <Text className="text-xs text-primary" numberOfLines={1}>
-                  {dropLabel}
-                </Text>
-              ) : null}
+                }}>
+                <Icon as={PackageIcon} className="size-4 text-foreground" size={16} />
+                <Text className="font-semibold text-foreground">Export</Text>
+              </Button>
             </View>
           </View>
-        </Animated.View>
-      </View>
 
-      <ProjectModals />
+          {/* ── Drag preview overlay ──────────────────────────────── */}
+          <Animated.View style={dragPreviewStyle} pointerEvents="none">
+            <View className="flex-row items-center gap-3 rounded-xl border border-primary bg-card px-4 py-3 shadow-lg shadow-black/20">
+              <Icon
+                as={draggedNode?.type === "folder" ? FolderIcon : FileIcon}
+                className="size-5 text-primary"
+                size={20}
+              />
+              <View className="flex-1">
+                <Text className="text-base font-medium text-foreground" numberOfLines={1}>
+                  {draggedNode?.name}
+                </Text>
+                {dropLabel ? (
+                  <Text className="text-xs text-primary" numberOfLines={1}>
+                    {dropLabel}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
+          </Animated.View>
+        </View>
 
-      {/* ── Export Result Alert ───────────────────────────────── */}
-      <AlertDialog
-        open={exportStatus !== null}
-        onOpenChange={(open) => {
-          if (!open) setExportStatus(null);
-        }}>
-        <AlertDialogContent>
-          <AlertDialogHeader className="items-center sm:items-center">
-            {/* {exportStatus?.status === "success" ? ( */}
-            {/*   <Icon as={CheckCircleIcon} className="mb-2 size-12 text-green-500" size={48} /> */}
-            {/* ) : ( */}
-            {/*   <Icon as={XCircleIcon} className="mb-2 size-12 text-destructive" size={48} /> */}
-            {/* )} */}
-            <AlertDialogTitle
-              className={exportStatus?.status === "success" ? "text-green-500" : ""}>
-              {exportStatus?.status === "success" ? "Export Successful" : "Export Failed"}
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-center">
-              {exportStatus?.message}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="sm:justify-center">
-            <AlertDialogAction
-              className={
-                exportStatus?.status === "success"
-                  ? "bg-green-500 hover:bg-green-600 active:bg-green-600/90"
-                  : ""
-              }
-              onPress={() => setExportStatus(null)}>
-              <Text className={exportStatus?.status === "success" ? "text-white" : ""}>
-                Dismiss
-              </Text>
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        <ProjectModals />
 
-      {/* ── Release Not Configured Alert ──────────────────────── */}
-      <AlertDialog
-        open={releasePromptVisible}
-        onOpenChange={setReleasePromptVisible}>
-        <AlertDialogContent>
-          <AlertDialogHeader className="items-center sm:items-center">
-            <AlertDialogTitle>Release Settings Required</AlertDialogTitle>
-            <AlertDialogDescription className="text-center">
-              You need to configure your email and password in Release Settings before you can publish a release.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-row justify-center gap-3 sm:justify-center">
-            <AlertDialogAction
-              className="bg-muted"
-              onPress={() => setReleasePromptVisible(false)}>
-              <Text className="text-foreground">Cancel</Text>
-            </AlertDialogAction>
-            <AlertDialogAction
-              onPress={() => {
-                setReleasePromptVisible(false);
-                router.push("/release-settings");
-              }}>
-              <Text className="text-primary-foreground">Go to Settings</Text>
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        {/* ── Export Result Alert ───────────────────────────────── */}
+        <AlertDialog
+          open={exportStatus !== null}
+          onOpenChange={(open) => {
+            if (!open) setExportStatus(null);
+          }}>
+          <AlertDialogContent>
+            <AlertDialogHeader className="items-center sm:items-center">
+              {/* {exportStatus?.status === "success" ? ( */}
+              {/*   <Icon as={CheckCircleIcon} className="mb-2 size-12 text-green-500" size={48} /> */}
+              {/* ) : ( */}
+              {/*   <Icon as={XCircleIcon} className="mb-2 size-12 text-destructive" size={48} /> */}
+              {/* )} */}
+              <AlertDialogTitle
+                className={exportStatus?.status === "success" ? "text-green-500" : ""}>
+                {exportStatus?.status === "success" ? "Export Successful" : "Export Failed"}
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-center">
+                {exportStatus?.message}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="sm:justify-center">
+              <AlertDialogAction
+                className={
+                  exportStatus?.status === "success"
+                    ? "bg-green-500 hover:bg-green-600 active:bg-green-600/90"
+                    : ""
+                }
+                onPress={() => setExportStatus(null)}>
+                <Text className={exportStatus?.status === "success" ? "text-white" : ""}>
+                  Dismiss
+                </Text>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* ── Release Not Configured Alert ──────────────────────── */}
+        <AlertDialog open={releasePromptVisible} onOpenChange={setReleasePromptVisible}>
+          <AlertDialogContent>
+            <AlertDialogHeader className="items-center sm:items-center">
+              <AlertDialogTitle>Release Settings Required</AlertDialogTitle>
+              <AlertDialogDescription className="text-center">
+                You need to configure your email and password in Release Settings before you can
+                publish a release.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex-row justify-center gap-3 sm:justify-center">
+              <AlertDialogAction
+                className="bg-muted"
+                onPress={() => setReleasePromptVisible(false)}>
+                <Text className="text-foreground">Cancel</Text>
+              </AlertDialogAction>
+              <AlertDialogAction
+                onPress={() => {
+                  setReleasePromptVisible(false);
+                  router.push("/release-settings");
+                }}>
+                <Text className="text-primary-foreground">Go to Settings</Text>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </ExplorerContext.Provider>
     </>
   );

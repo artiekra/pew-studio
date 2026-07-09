@@ -29,15 +29,20 @@ export function DeleteModal() {
   };
 
   return (
-    <AlertDialog open={visible} onOpenChange={(open) => { if (!open) handleCancel(); }}>
+    <AlertDialog
+      open={visible}
+      onOpenChange={(open) => {
+        if (!open) handleCancel();
+      }}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>
-            Delete {node?.type === "folder" ? "Folder" : "File"}
-          </AlertDialogTitle>
+          <AlertDialogTitle>Delete {node?.type === "folder" ? "Folder" : "File"}</AlertDialogTitle>
           <AlertDialogDescription>
             Are you sure you want to delete "{node?.name}"?
-            {node?.type === "folder" ? " All contents inside this folder will also be deleted." : ""} This cannot be undone.
+            {node?.type === "folder"
+              ? " All contents inside this folder will also be deleted."
+              : ""}{" "}
+            This cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

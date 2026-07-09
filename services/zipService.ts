@@ -83,7 +83,8 @@ export async function importProjectFromZip(projectId: string, zipUri: string): P
   const zip = await JSZip.loadAsync(zipContent, { base64: true });
 
   const keys = Object.keys(zip.files);
-  const isSingleLevelFolder = keys.length > 0 && keys.every(k => k === "level/" || k.startsWith("level/"));
+  const isSingleLevelFolder =
+    keys.length > 0 && keys.every((k) => k === "level/" || k.startsWith("level/"));
 
   for (let [relativePath, file] of Object.entries(zip.files)) {
     if (isSingleLevelFolder) {

@@ -10,7 +10,10 @@ export default function EditorScreen() {
   const { projectId, fileId } = useLocalSearchParams<{ projectId: string; fileId: string }>();
   const router = useRouter();
 
-  const { webViewRef, htmlSource, handleMessage, handleLoadEnd } = useEditorBridge(projectId, fileId);
+  const { webViewRef, htmlSource, handleMessage, handleLoadEnd } = useEditorBridge(
+    projectId,
+    fileId
+  );
 
   return (
     <>

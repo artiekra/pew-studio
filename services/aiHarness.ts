@@ -144,9 +144,7 @@ export async function runHarness(
   }
 
   const finalUserText =
-    contextPrefix.length > 0
-      ? `${resolvedText}\n${contextPrefix}`
-      : resolvedText;
+    contextPrefix.length > 0 ? `${resolvedText}\n${contextPrefix}` : resolvedText;
 
   // 4. Build API messages
   const systemMessage: ApiMessage = {
@@ -157,11 +155,7 @@ export async function runHarness(
   const historyMessages = toApiMessages(chatMessages);
   const userMessage: ApiMessage = { role: "user", content: finalUserText };
 
-  let conversation: ApiMessage[] = [
-    systemMessage,
-    ...historyMessages,
-    userMessage,
-  ];
+  let conversation: ApiMessage[] = [systemMessage, ...historyMessages, userMessage];
 
   // 5. Tool-calling loop
   const allToolCalls: ToolCallInfo[] = [];
@@ -227,9 +221,6 @@ export async function runHarness(
     assistantContent:
       "I've reached the maximum number of tool-calling rounds. Here's what I did so far.",
     toolCalls: allToolCalls,
-    undoGroup:
-      undoEntries.length > 0
-        ? { messageId: "", entries: undoEntries }
-        : null,
+    undoGroup: undoEntries.length > 0 ? { messageId: "", entries: undoEntries } : null,
   };
 }

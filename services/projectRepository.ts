@@ -28,7 +28,10 @@ async function saveProjects(projects: Project[]): Promise<void> {
   await FileSystem.writeAsStringAsync(PROJECTS_FILE, JSON.stringify(projects, null, 2));
 }
 
-export async function createProject(name: string, template: ProjectTemplate = "basic"): Promise<Project> {
+export async function createProject(
+  name: string,
+  template: ProjectTemplate = "basic"
+): Promise<Project> {
   const projects = await getProjects();
   const now = new Date().toISOString();
   const project: Project = {
@@ -39,11 +42,11 @@ export async function createProject(name: string, template: ProjectTemplate = "b
   };
   projects.unshift(project); // newest first
   await saveProjects(projects);
-  
+
   const projectDir = getProjectDir(project.id);
   await FileSystem.makeDirectoryAsync(projectDir, { intermediates: true });
   await ensureAssetsAreCopied(project.id, template);
-  
+
   return project;
 }
 
@@ -58,18 +61,18 @@ export async function importProject(name: string, zipUri: string): Promise<Proje
   };
   projects.unshift(project); // newest first
   await saveProjects(projects);
-  
+
   const projectDir = getProjectDir(project.id);
   await FileSystem.makeDirectoryAsync(projectDir, { intermediates: true });
   await importProjectFromZip(project.id, zipUri);
-  
+
   return project;
 }
 
 export async function deleteProject(id: string): Promise<void> {
   const projects = await getProjects();
   await saveProjects(projects.filter((p) => p.id !== id));
-  
+
   const projectDir = getProjectDir(id);
   const info = await FileSystem.getInfoAsync(projectDir);
   if (info.exists) {

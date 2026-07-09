@@ -32,8 +32,12 @@ export function RenameModal() {
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleCancel}>
-      <Pressable className="flex-1 items-center justify-center bg-black/50 p-6" onPress={handleCancel}>
-        <Pressable className="w-full max-w-sm gap-4 rounded-2xl border border-border bg-card p-6" onPress={() => {}}>
+      <Pressable
+        className="flex-1 items-center justify-center bg-black/50 p-6"
+        onPress={handleCancel}>
+        <Pressable
+          className="w-full max-w-sm gap-4 rounded-2xl border border-border bg-card p-6"
+          onPress={() => {}}>
           <Text className="text-xl font-semibold text-foreground">
             Rename {node?.type === "folder" ? "Folder" : "File"}
           </Text>

@@ -165,10 +165,7 @@ export async function executeTool(
 
 // ── Undo Executor ────────────────────────────────────────────────────
 
-export async function executeUndo(
-  projectId: string,
-  undoGroup: UndoGroup
-): Promise<string[]> {
+export async function executeUndo(projectId: string, undoGroup: UndoGroup): Promise<string[]> {
   const results: string[] = [];
 
   // Undo in reverse order

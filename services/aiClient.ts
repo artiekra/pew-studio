@@ -92,9 +92,7 @@ export async function sendChatCompletion(
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
     const msg =
-      errorData?.error?.message ||
-      errorData?.message ||
-      `API returned HTTP ${res.status}`;
+      errorData?.error?.message || errorData?.message || `API returned HTTP ${res.status}`;
     throw new Error(msg);
   }
 
@@ -137,16 +135,30 @@ export async function fetchAvailableModels(): Promise<string[]> {
   try {
     const res = await fetch(url, { method: "GET", headers });
     if (!res.ok) return [];
-    
+
     const data = await res.json();
-    
+
     // Blacklist of model name substrings that are typically for images, audio, embeddings, or legacy text
     const blacklist = [
-      "dall-e", "dalle", "tts", "whisper", "embedding", "embed",
-      "babbage", "davinci", "ada", "curie",
-      "stable-diffusion", "flux", "midjourney",
-      "audio", "moderation", "realtime",
-      "text-search", "text-similarity", "text-moderation"
+      "dall-e",
+      "dalle",
+      "tts",
+      "whisper",
+      "embedding",
+      "embed",
+      "babbage",
+      "davinci",
+      "ada",
+      "curie",
+      "stable-diffusion",
+      "flux",
+      "midjourney",
+      "audio",
+      "moderation",
+      "realtime",
+      "text-search",
+      "text-similarity",
+      "text-moderation",
     ];
 
     const isChatModel = (id: string) => {
@@ -178,4 +190,3 @@ export async function fetchAvailableModels(): Promise<string[]> {
     return [];
   }
 }
-
