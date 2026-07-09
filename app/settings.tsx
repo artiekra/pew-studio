@@ -91,7 +91,7 @@ export default function SettingsScreen() {
         </View>
 
         <View className="items-center pb-8 pt-4">
-          <Text className="text-sm text-muted-foreground">PewPew Studio 1.0.0</Text>
+          <Text className="text-sm text-muted-foreground">PewPew Studio 1.0.1</Text>
         </View>
       </View>
     </>

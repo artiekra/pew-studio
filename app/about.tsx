@@ -15,7 +15,7 @@ export default function AboutScreen() {
       <Stack.Screen options={{ title: "About" }} />
       <View className="flex-1 items-center justify-center bg-background p-6">
         <Text className="text-m text-center text-muted-foreground">PewPew Studio</Text>
-        <Text className="text-m text-center text-muted-foreground">version 1.0.0</Text>
+        <Text className="text-m text-center text-muted-foreground">version 1.0.1</Text>
 
         <Text className="text-m mx-4 mt-4 text-center text-muted-foreground">
           Open-source mobile code editor for PewPew Live levels
