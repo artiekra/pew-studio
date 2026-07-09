@@ -10,6 +10,12 @@ Open-source mobile code editor for PewPew Live levels
 
 ![app preview](https://raw.githubusercontent.com/artiekra/pew-studio/refs/heads/main/preview.png)
 
+## Installing
+
+You can grab an .apk file from releases page: https://github.com/artiekra/pew-studio/releases
+
+To build yourself, clone the repo and run `npm run build:preview`
+
 ## Contributing
 
 To run the development server:
