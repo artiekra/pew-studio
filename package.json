@@ -13,7 +13,8 @@
     "build:development": "mkdir -p $HOME/.cache/app-build-tmp && export TMPDIR=$HOME/.cache/app-build-tmp && export GRADLE_OPTS=\"-Djava.io.tmpdir=$HOME/.cache/app-build-tmp\" && eas build --platform android --profile development --local",
     "build:preview": "mkdir -p $HOME/.cache/app-build-tmp && export TMPDIR=$HOME/.cache/app-build-tmp && export GRADLE_OPTS=\"-Djava.io.tmpdir=$HOME/.cache/app-build-tmp\" && eas build --platform android --profile preview --local",
     "build:production": "mkdir -p $HOME/.cache/app-build-tmp && export TMPDIR=$HOME/.cache/app-build-tmp && export GRADLE_OPTS=\"-Djava.io.tmpdir=$HOME/.cache/app-build-tmp\" && eas build --platform android --profile production --local",
-    "eas-build-pre-install": "mkdir -p assets/editor && cd source/editor && $npm_execpath install && $npm_execpath run build && cd ../.. && cp source/editor/dist/index.html assets/editor/index.html"
+    "eas-build-pre-install": "mkdir -p assets/editor && cd source/editor && $npm_execpath install && $npm_execpath run build && cd ../.. && cp source/editor/dist/index.html assets/editor/index.html",
+    "prepare": "husky"
   },
   "dependencies": {
     "@dr.pogodin/react-native-fs": "^2.38.2",
@@ -63,9 +64,14 @@
   "devDependencies": {
     "@babel/core": "^7.26.0",
     "@types/react": "~19.2.10",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.8",
     "prettier": "^3.8.3",
     "prettier-plugin-tailwindcss": "^0.8.0",
     "typescript": "~5.9.2"
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown"
   },
   "private": true
 }
