@@ -1,7 +1,7 @@
 {
   "name": "pewpew-studio",
   "main": "expo-router/entry",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "scripts": {
     "dev": "mkdir -p assets/editor && cd source/editor && $npm_execpath run build && cd ../.. && cp source/editor/dist/index.html assets/editor/index.html && expo start -c",
     "android": "expo start -c --android",
